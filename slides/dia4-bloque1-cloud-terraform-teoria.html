@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teoria: Cloud y Terraform — Bootcamp DevOps 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00a3e0; --accent-2: #6366f1;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00a3e0; --accent-2: #6366f1;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); min-height: 100vh; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(2.5rem, 6vw, 5rem); }
+  .headline-lg { font-size: clamp(1.8rem, 4vw, 3rem); }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .body-text { font-size: 1.1rem; line-height: 1.8; color: var(--text-muted); margin-bottom: 1rem; }
+
+  .bg-glow { position: fixed; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: fixed; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  strong { color: var(--text-primary); }
+
+  .container { max-width: 860px; margin: 0 auto; padding: 6rem 2rem 4rem; position: relative; z-index: 2; }
+
+  .cover { text-align: center; margin-bottom: 4rem; padding-bottom: 3rem; border-bottom: 1px solid var(--border); }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 2rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.4rem; font-style: italic; color: var(--text-muted); margin-top: 0.5rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 1.5rem auto; }
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1rem; }
+
+  .section { margin-bottom: 3rem; }
+
+  .slide-list { list-style: none; padding: 0; margin: 1rem 0 1.5rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.05rem; position: relative; border-bottom: 1px solid var(--border); line-height: 1.6; }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; overflow-x: auto; }
+
+  .slide-table { width: 100%; margin: 1.5rem 0; border-collapse: separate; border-spacing: 0 0.4rem; }
+  .slide-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 0.6rem 1.2rem; text-align: left; }
+  .slide-table td { padding: 1rem 1.2rem; background: var(--bg-card); font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; }
+  .slide-table tr td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; color: var(--text-primary); }
+  .slide-table tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  .back-link { display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--accent-1); text-decoration: none; padding: 0.8rem 1.8rem; border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); border-radius: 100px; transition: all 0.2s; margin-top: 2rem; }
+  .back-link:hover { background: var(--accent-1); color: white; }
+
+  .footer { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; }
+</style>
+</head>
+<body>
+
+<div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;top:-200px;right:-100px;"></div>
+<div class="bg-glow" style="width:500px;height:500px;background:#6366f1;bottom:-200px;left:-100px;"></div>
+<div class="bg-noise"></div>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed" style="text-decoration:none;"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+<div class="container">
+
+  <div class="cover">
+    <div class="cover-brand">T-Systems &middot; Universidad de Granada &middot; 2026</div>
+    <span class="tag">Teoria &middot; Dia 4 &mdash; Bloque 1</span>
+    <h1 class="headline headline-xl"><span class="gradient-text">Cloud y Terraform</span></h1>
+    <p class="cover-subtitle">Infraestructura como codigo</p>
+    <div class="cover-line"></div>
+  </div>
+
+  <!-- Seccion 1 -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">1. Que es Cloud Computing</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">En los tiempos antiguos, si querias montar una web tenias que comprar un servidor fisico, ponerlo en una sala con aire acondicionado, conectarle cables, instalar el sistema operativo y mantenerlo tu mismo. Si se rompia el disco duro a las 3 de la manana, problema tuyo.</p>
+    <p class="body-text">Cloud Computing es <strong>alquilar ordenadores por internet</strong> en lugar de comprarlos. Alguien (Amazon, Microsoft, Google) tiene miles de servidores en centros de datos gigantes y tu los usas a demanda: pagas solo por lo que consumes, como la luz de tu casa.</p>
+  </div>
+
+  <!-- Seccion 2 -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">2. IaaS, PaaS y SaaS</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Hay tres formas de "consumir" cloud, y se entienden mejor con pizza:</p>
+    <table class="slide-table">
+      <thead><tr><th>Modelo</th><th>Que te dan</th><th>Analogia pizza</th></tr></thead>
+      <tbody>
+        <tr><td>IaaS</td><td>Maquinas virtuales, redes, discos. Tu instalas todo.</td><td>Te dan el horno y los ingredientes. Tu haces la pizza.</td></tr>
+        <tr><td>PaaS</td><td>Entorno listo para subir tu codigo. No tocas servidores.</td><td>Te dan una pizza congelada. Tu solo la metes al horno.</td></tr>
+        <tr><td>SaaS</td><td>Aplicacion terminada. Solo la usas.</td><td>Pizza a domicilio. Abres la caja y comes.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Seccion 3 -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">3. Los tres grandes proveedores cloud</span></h2>
+    <table class="slide-table" style="margin-top:1.5rem;">
+      <thead><tr><th>Proveedor</th><th>Cloud</th><th>VMs</th><th>K8s</th><th>BD</th></tr></thead>
+      <tbody>
+        <tr><td>Amazon</td><td>AWS</td><td>EC2</td><td>EKS</td><td>RDS</td></tr>
+        <tr><td>Microsoft</td><td>Azure</td><td>Virtual Machines</td><td>AKS</td><td>Azure SQL</td></tr>
+        <tr><td>Google</td><td>GCP</td><td>Compute Engine</td><td>GKE</td><td>Cloud SQL</td></tr>
+      </tbody>
+    </table>
+    <p class="body-text">Para este bootcamp no necesitamos cuenta en ninguno de ellos. Trabajaremos 100% en local.</p>
+  </div>
+
+  <!-- Seccion 4 -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">4. El problema: infraestructura manual</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Hasta ahora, cuando alguien necesita infraestructura en cloud, hace esto:</p>
+    <ul class="slide-list">
+      <li>Abre la consola web (portal de AWS/Azure/GCP).</li>
+      <li>Hace clic en "Crear maquina virtual".</li>
+      <li>Rellena 15 formularios.</li>
+      <li>Le da a "Crear".</li>
+      <li>Repite para la base de datos, el balanceador, la red...</li>
+    </ul>
+    <p class="body-text">Problemas de hacerlo asi:</p>
+    <ul class="slide-list">
+      <li><strong>Lento</strong>: crear 50 recursos a mano lleva horas.</li>
+      <li><strong>Propenso a errores</strong>: un clic mal y la configuracion es distinta.</li>
+      <li><strong>No reproducible</strong>: si quieres crear lo mismo en otro entorno, tienes que repetir todos los clics.</li>
+      <li><strong>Sin historial</strong>: no sabes quien cambio que ni cuando.</li>
+    </ul>
+    <p class="body-text">Suena al mismo problema que teniamos antes de Git, verdad?</p>
+  </div>
+
+  <!-- Seccion 5 -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">5. Infrastructure as Code (IaC)</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">La solucion es la misma idea que con el codigo: <strong>escribir la infraestructura en ficheros de texto</strong> y gestionarlos con control de versiones.</p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div>
+      <pre class="terminal-body">Infraestructura manual          Infrastructure as Code
+------------------------------------------------------
+Clicks en la consola web   -->  Ficheros .tf en un repo Git
+"Creo que lo configure asi" --> Codigo versionado y revisable
+Imposible de reproducir    -->  terraform apply y listo</pre>
+    </div>
+  </div>
+
+  <!-- Seccion 6 -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">6. Que es Terraform</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Terraform es una herramienta de HashiCorp que permite <strong>crear, modificar y destruir infraestructura escribiendo codigo</strong>. Sus ventajas:</p>
+    <ul class="slide-list">
+      <li><strong>Multi-cloud</strong>: funciona con AWS, Azure, GCP, Docker, Kubernetes y cientos mas.</li>
+      <li><strong>Declarativo</strong>: tu describes QUE quieres, no COMO crearlo.</li>
+      <li><strong>Estado</strong>: Terraform recuerda que ha creado (fichero <code style="font-family:'JetBrains Mono',monospace;font-size:0.9em;background:var(--bg-card);padding:0.15rem 0.5rem;border-radius:6px;border:1px solid var(--border);">terraform.tfstate</code>).</li>
+      <li><strong>Plan</strong>: antes de hacer cambios, te ensena lo que VA a hacer.</li>
+    </ul>
+  </div>
+
+  <!-- Seccion 7 -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">7. HCL: el lenguaje de Terraform</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Terraform usa un lenguaje propio llamado HCL (HashiCorp Configuration Language). Estos son los bloques basicos:</p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div>
+      <pre class="terminal-body"># 1. TERRAFORM BLOCK: que proveedores necesitamos
+terraform {
+  required_providers {
+    local = {
+      source  = "hashicorp/local"
+      version = "2.4.1"
+    }
+  }
+}
+
+# 2. PROVIDER: configuracion del proveedor
+provider "local" {}
+
+# 3. RESOURCE: lo que queremos crear
+resource "local_file" "saludo" {
+  content  = var.mensaje        # &lt;-- usa una variable
+  filename = "saludo.txt"
+}
+
+# 4. VARIABLE: parametros de entrada
+variable "mensaje" {
+  type    = string
+  default = "Hola desde Terraform"
+}
+
+# 5. OUTPUT: valores de salida (para ver o usar despues)
+output "ruta_fichero" {
+  value = local_file.saludo.filename
+}</pre>
+    </div>
+  </div>
+
+  <!-- Seccion 8 -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">8. El flujo de trabajo de Terraform</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Terraform tiene 4 comandos principales que siempre se ejecutan en este orden:</p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div>
+      <pre class="terminal-body">terraform init       Descarga los proveedores necesarios.
+    |                (Solo la primera vez o al cambiar proveedores.)
+    v
+terraform plan       Muestra QUE va a hacer, sin tocar nada.
+    |                (Vista previa de los cambios.)
+    v
+terraform apply      Ejecuta los cambios de verdad.
+    |                (Crea/modifica/destruye recursos.)
+    v
+terraform destroy    Elimina TODO lo que Terraform creo.
+                     (Limpieza total.)</pre>
+    </div>
+    <p class="body-text">Regla de oro: <strong>nunca hagas <code style="font-family:'JetBrains Mono',monospace;font-size:0.9em;background:var(--bg-card);padding:0.15rem 0.5rem;border-radius:6px;border:1px solid var(--border);">apply</code> sin mirar el <code style="font-family:'JetBrains Mono',monospace;font-size:0.9em;background:var(--bg-card);padding:0.15rem 0.5rem;border-radius:6px;border:1px solid var(--border);">plan</code> antes</strong>.</p>
+  </div>
+
+  <div style="text-align:center;padding-top:2rem;border-top:1px solid var(--border);">
+    <a href="index.html" class="back-link">&larr; Volver al indice</a>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span class="logo">carlos<strong>palanca</strong>.es</span> &middot; Bootcamp DevOps 2026
+</div>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+</script>
+
+</body>
+</html>

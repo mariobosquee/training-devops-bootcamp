@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docker Basico — Bootcamp DevOps 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); }
+
+  .slide { min-height: 100vh; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; padding: 4rem; position: relative; overflow: hidden; }
+  .slide-inner { max-width: 1100px; width: 100%; z-index: 2; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(3rem, 8vw, 6.5rem); }
+  .headline-lg { font-size: clamp(2rem, 5vw, 4rem); }
+  .body-text { font-size: 1.15rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1.5rem; }
+  .slide-num { position: absolute; bottom: 2rem; right: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-dim); }
+  .slide-footer { position: absolute; bottom: 2rem; left: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); }
+
+  .bg-glow { position: absolute; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: absolute; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+  .bg-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+  .slide-cover { text-align: center; }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.8rem; font-style: italic; color: var(--text-muted); margin-top: 1rem; margin-bottom: 3rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 2rem auto; }
+  .cover-meta { display: flex; gap: 2rem; justify-content: center; font-size: 0.9rem; color: var(--text-dim); }
+
+  .slide-list { list-style: none; padding: 0; margin-top: 1rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.1rem; position: relative; border-bottom: 1px solid var(--border); }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; }
+
+  .slide-table { width: 100%; margin: 1.5rem 0; border-collapse: separate; border-spacing: 0 0.4rem; }
+  .slide-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 0.6rem 1.2rem; text-align: left; }
+  .slide-table td { padding: 1rem 1.2rem; background: var(--bg-card); font-size: 1rem; color: var(--text-muted); }
+  .slide-table tr td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; color: var(--text-primary); }
+  .slide-table tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  strong { color: var(--text-primary); }
+
+  .nav-links { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem; }
+  .nav-link { display: flex; flex-direction: column; gap: 0.3rem; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; text-decoration: none; color: var(--text-primary); transition: border-color 0.3s, transform 0.2s; }
+  .nav-link:hover { border-color: var(--accent-1); transform: translateY(-3px); }
+  .nav-prev { text-align: left; }
+  .nav-next { text-align: right; }
+  .nav-arrow { font-size: 1.5rem; color: var(--accent-1); }
+  .nav-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); }
+  .nav-title { font-family: 'Instrument Serif', serif; font-size: 1.4rem; }
+
+  @media print { .slide { page-break-after: always; } .theme-toggle, .logo-fixed { display: none; } html { scroll-snap-type: none; } }
+</style>
+</head>
+<body>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed" style="text-decoration:none;"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+
+<section class="slide slide-cover">
+  <div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;top:-200px;right:-100px;"></div><div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-200px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="cover-brand">T-Systems &middot; Universidad de Granada &middot; 2026</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">Docker Basico</span></h1>
+    <p class="cover-subtitle">Bootcamp DevOps 2026 &mdash; Dia 1 — Bloque 3</p>
+    <div class="cover-line"></div>
+    <div class="cover-meta"><span>Carlos Palanca</span><span>&middot;</span><span>Abril 2026</span></div>
+  </div>
+  <div class="slide-num">01 / 17</div>
+</section>
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">El problema</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">El problema</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"># "En mi ordenador funciona"</p>
+
+<p class="body-text">La frase mas repetida en el mundo del desarrollo de software.</p>
+
+<p class="body-text">Tu companero te pasa su codigo. Lo ejecutas. No funciona.</p>
+
+<ul class="slide-list">
+<li>Tiene otra version de Node.js</li>
+<li>Le falta una libreria</li>
+<li>Su configuracion es diferente</li>
+<li>Usa otro sistema operativo</li>
+</ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">02 / 17</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">El problema en </div>
+    <h2 class="headline headline-lg"><span class="gradient-text">El problema en la vida real</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"># Funciona aqui, falla alla</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">Desarrollador A     Desarrollador B     Servidor
+<p class="body-text">+--------------+    +--------------+    +--------------+</p>
+<table class="slide-table"><thead><tr><th>Node 18</th><th></th><th>Node 20</th><th></th><th>Node 16</th></tr></thead><tbody><tr><td>npm 9</td><td></td><td>npm 10</td><td></td><td>npm 8</td></tr><tr><td>Windows 11</td><td></td><td>macOS</td><td></td><td>Ubuntu 22</td></tr><tr><td>SQLite 3.40</td><td></td><td>SQLite 3.45</td><td></td><td>SQLite 3.37</td></tr></tbody></table>+--------------+    +--------------+    +--------------+
+<p class="body-text">OK                 ERROR              ERROR</pre></div></p>
+
+<p class="body-text">Cada entorno es diferente. Cada entorno puede fallar de forma distinta.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">03 / 17</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">La solucion</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">La solucion: contenedores</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"># El contenedor de transporte maritimo</p>
+
+<p class="body-text">Antes de los contenedores de transporte, cada producto se cargaba de forma distinta en barcos, camiones y trenes. Era lento y propenso a errores.</p>
+
+<p class="body-text">El contenedor estandarizo todo: un formato unico que encaja en cualquier medio de transporte.</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">+------------------------------------------+
+<table class="slide-table"><thead><tr><th>CONTENEDOR</th></tr></thead><tbody><tr><td>+------------------------------------+</td></tr><tr><td></td><td>Tu aplicacion</td><td></td></tr><tr><td></td><td>+ Runtime (Node.js 18)</td><td></td></tr><tr><td></td><td>+ Dependencias (express, sqlite)</td><td></td></tr><tr><td></td><td>+ Configuracion</td><td></td></tr><tr><td>+------------------------------------+</td></tr></tbody></table>+------------------------------------------+
+<p class="body-text">Funciona en: portatil, servidor, nube</pre></div></p>
+
+<p class="body-text">Docker hace lo mismo con el software.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">04 / 17</div>
+</section>
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Contenedores vs</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Contenedores vs Maquinas Virtuales</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"># Contenedor vs VM</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">MAQUINA VIRTUAL                CONTENEDOR
+<p class="body-text">+------------------+         +------------------+</p>
+<table class="slide-table"><thead><tr><th>App</th><th>App</th><th></th><th>App</th><th>App</th></tr></thead><tbody><tr></tr><tr><td>SO</td><td>SO</td><td></td><td>Motor Docker</td></tr><tr><td>entero</td><td>entero</td></tr><tr><td>Sistema Operativo</td></tr><tr><td>Hypervisor</td></tr><tr><td>Hardware</td></tr><tr><td>Sistema Operativo</td></tr><tr></tr><tr><td>Hardware</td></tr><tr></tr><tr></tr><tr><td>Aspecto</td><td>VM</td><td>Contenedor</td></tr><tr><td>Tamano</td><td>Gigabytes</td><td>Megabytes</td></tr><tr><td>Arranque</td><td>Minutos</td><td>Segundos</td></tr><tr><td>Recursos</td><td>Muchos</td><td>Pocos</td></tr></tbody></table>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">05 / 17</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Arquitectura de Dock</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Arquitectura de Docker</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"># Como funciona Docker</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">TU TERMINAL           DOCKER DAEMON          DOCKER HUB
+<p class="body-text">+-------------+       +---------------+       +------------+</p>
+<table class="slide-table"><thead><tr><th>docker run</th><th>----></th><th>dockerd</th><th>----></th><th>Imagenes</th></tr></thead><tbody><tr><td>docker build</td><td></td><td></td><td></td><td>oficiales</td></tr><tr><td>docker ps</td><td></td><td>Crea y gestiona</td><td></td><td></td></tr></tbody></table>+-------------+       | contenedores  |       +------------+
+<p class="body-text">Cliente             Servidor (local)        Registro (nube)</pre></div></p>
+
+<p class="body-text">1. Tu escribes comandos en la terminal (cliente)</p>
+<p class="body-text">2. El daemon de Docker los ejecuta</p>
+<p class="body-text">3. Si necesita una imagen, la descarga de Docker Hub</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">06 / 17</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Imagen vs Contenedor</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Imagen vs Contenedor</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"># Imagen = Receta | Contenedor = Plato</p>
+
+<strong>Imagen Docker:</strong>
+<ul class="slide-list">
+<li>Archivo de solo lectura</li>
+<li>Se crea una vez</li>
+<li>Se comparte y reutiliza</li>
+</ul>
+
+<strong>Contenedor Docker:</strong>
+<ul class="slide-list">
+<li>Instancia en ejecucion de una imagen</li>
+<li>Se pueden crear muchos a partir de una imagen</li>
+<li>Cada uno es independiente</li>
+</ul>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">IMAGEN                CONTENEDORES
+<p class="body-text">+----------+     +------+  +------+  +------+</p>
+<table class="slide-table"><thead><tr><th>Receta</th><th>--></th><th>Plato</th><th></th><th>Plato</th><th></th><th>Plato</th></tr></thead><tbody><tr><td>tortilla</td><td></td><td>#1</td><td></td><td>#2</td><td></td><td>#3</td></tr></tbody></table>+----------+     +------+  +------+  +------+</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">07 / 17</div>
+</section>
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Dockerfile</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Dockerfile: FROM y WORKDIR</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"># Dockerfile: la receta de tu imagen</p>
+
+<p class="body-text">### FROM -- La base</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">FROM node:18-alpine</pre></div>
+
+<p class="body-text">"Empieza con una imagen que ya tiene Node.js 18 instalado."</p>
+
+<p class="body-text">Alpine es una version minima de Linux (5 MB). Perfecta para contenedores.</p>
+
+<p class="body-text">### WORKDIR -- Donde trabajar</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">WORKDIR /app</pre></div>
+
+<p class="body-text">"Crea la carpeta /app y trabaja ahi dentro."</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">08 / 17</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Dockerfile: COPY y R</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Dockerfile: COPY y RUN</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"># COPY y RUN</p>
+
+<p class="body-text">### COPY -- Meter archivos en la imagen</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">COPY package*.json ./
+<p class="body-text">COPY src/ ./src/</pre></div></p>
+
+<p class="body-text">Copia archivos desde tu ordenador al interior de la imagen.</p>
+
+<p class="body-text">### RUN -- Ejecutar durante la construccion</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">RUN npm install</pre></div>
+
+<p class="body-text">Instala las dependencias. Se ejecuta UNA vez, al construir la imagen.</p>
+
+<p class="body-text">Truco: copiar primero package.json y luego el codigo permite que Docker cache las dependencias.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">09 / 17</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Dockerfile: EXPOSE y</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Dockerfile: EXPOSE y CMD</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"># EXPOSE y CMD</p>
+
+<p class="body-text">### EXPOSE -- Documentar el puerto</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">EXPOSE 3001</pre></div>
+
+<p class="body-text">Informa de que la app usa el puerto 3001. Es documentacion, no abre el puerto.</p>
+
+<p class="body-text">### CMD -- El comando de arranque</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">CMD ["node", "src/index.js"]</pre></div>
+
+<p class="body-text">Define que se ejecuta al iniciar el contenedor. Solo uno por Dockerfile.</p>
+
+<p class="body-text">### Dockerfile completo de nuestra API:</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">FROM node:18-alpine
+<p class="body-text">WORKDIR /app</p>
+<p class="body-text">COPY package*.json ./</p>
+<p class="body-text">RUN npm install</p>
+<p class="body-text">COPY src/ ./src/</p>
+<p class="body-text">EXPOSE 3001</p>
+<p class="body-text">CMD ["node", "src/index.js"]</pre></div></p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">10 / 17</div>
+</section>
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">docker build y </div>
+    <h2 class="headline headline-lg"><span class="gradient-text">docker build y docker run</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"># Construir y ejecutar</p>
+
+<p class="body-text">### Construir la imagen</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker build -t bootcamp-api .</pre></div>
+
+<ul class="slide-list">
+<li>`-t bootcamp-api` -- nombre de la imagen</li>
+<li>`.` -- busca el Dockerfile en el directorio actual</li>
+</ul>
+
+<p class="body-text">### Ejecutar un contenedor</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker run -p 3001:3001 bootcamp-api</pre></div>
+
+<ul class="slide-list">
+<li>`-p 3001:3001` -- conecta el puerto de tu ordenador con el del contenedor</li>
+<li>Formato: `-p PUERTO_TU_PC:PUERTO_CONTENEDOR`</li>
+</ul>
+
+<p class="body-text">Anade `-d` para ejecutar en segundo plano.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">11 / 17</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">docker ps y docker s</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">docker ps y docker stop</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"># Gestionar contenedores</p>
+
+<p class="body-text">### Ver contenedores activos</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker ps</pre></div>
+
+<p class="body-text">Muestra los contenedores que estan corriendo. Anade `-a` para ver todos (incluso los parados).</p>
+
+<p class="body-text">### Parar un contenedor</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker stop NOMBRE_O_ID</pre></div>
+
+<p class="body-text">### Eliminar un contenedor</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker rm NOMBRE_O_ID</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">12 / 17</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">docker logs y d</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">docker logs y docker exec</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"># Depurar contenedores</p>
+
+<p class="body-text">### Ver logs</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker logs NOMBRE_O_ID
+<p class="body-text">docker logs -f NOMBRE_O_ID    # seguir en tiempo real</pre></div></p>
+
+<p class="body-text">Muestra lo que la aplicacion ha escrito en consola. Fundamental para encontrar errores.</p>
+
+<p class="body-text">### Entrar en un contenedor</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker exec -it NOMBRE_O_ID sh</pre></div>
+
+<p class="body-text">Abre una terminal dentro del contenedor. Puedes explorar archivos, comprobar que hay instalado, etc.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">13 / 17</div>
+</section>
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Docker Compose: que </div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Docker Compose: que es</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"># Docker Compose</p>
+
+<p class="body-text">Una aplicacion real tiene varios servicios: API, frontend, base de datos...</p>
+
+<p class="body-text">Ejecutar cada uno con `docker run` y sus parametros es tedioso y propenso a errores.</p>
+
+<strong>Docker Compose</strong> permite definir todos los servicios en un archivo `docker-compose.yml` y levantarlos con un solo comando.
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">Sin Compose:                    Con Compose:
+<p class="body-text">docker build -t api .           docker compose up -d</p>
+<p class="body-text">docker build -t front .</p>
+<p class="body-text">docker run -p 3001:3001 api</p>
+<p class="body-text">docker run -p 3000:80 front</pre></div></p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">14 / 17</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Docker Compose</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Docker Compose: estructura</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"># docker-compose.yml</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">services:
+<p class="body-text">api:</p>
+<p class="body-text">build: ./backend</p>
+<p class="body-text">ports:</p>
+<ul class="slide-list">
+<li>"3001:3001"</li>
+</ul>
+<p class="body-text">environment:</p>
+<ul class="slide-list">
+<li>NODE_ENV=production</li>
+</ul>
+
+<p class="body-text">frontend:</p>
+<p class="body-text">build: ./frontend</p>
+<p class="body-text">ports:</p>
+<ul class="slide-list">
+<li>"3000:80"</li>
+</ul>
+<p class="body-text">depends_on:</p>
+<ul class="slide-list">
+<li>api</pre></div></li>
+</ul>
+
+<p class="body-text">### Comandos clave:</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker compose up -d     # Levantar todo
+<p class="body-text">docker compose ps        # Ver estado</p>
+<p class="body-text">docker compose logs      # Ver logs</p>
+<p class="body-text">docker compose down      # Parar todo</pre></div></p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">15 / 17</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Laboratorio</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Laboratorio</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"># Laboratorio: Containeriza la Bootcamp Fitness App</p>
+
+<strong>Duracion:</strong> 70 minutos + 15 minutos showcase
+<strong>Formato:</strong> En parejas
+
+<table class="slide-table"><thead><tr><th>Parte</th><th>Que hareis</th><th>Tiempo</th></tr></thead><tbody><tr><td>1</td><td>Primeros pasos con Docker</td><td>15 min</td></tr><tr><td>2</td><td>Dockerfile para el backend</td><td>20 min</td></tr><tr><td>3</td><td>Dockerfile para el frontend</td><td>10 min</td></tr><tr><td>4</td><td>Docker Compose (todo junto)</td><td>20 min</td></tr><tr><td>5</td><td>Showcase (demo a la clase)</td><td>15 min</td></tr></tbody></table>
+<p class="body-text">Seguid las instrucciones del documento de laboratorio paso a paso.</p>
+
+<div style="margin-top:2rem;text-align:center;"><a href="dia1-bloque3-docker-basico-lab.html" style="display:inline-block;padding:1rem 2.5rem;background:linear-gradient(135deg, var(--accent-1), var(--accent-2));color:white;text-decoration:none;border-radius:100px;font-family:'JetBrains Mono',monospace;font-size:0.9rem;letter-spacing:0.05em;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">Abrir laboratorio &rarr;</a></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">16 / 17</div>
+</section>
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Recap</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Recap</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"># Que hemos aprendido</p>
+
+<p class="body-text">1. <strong>Contenedor:</strong> paquete que lleva tu app y todo lo necesario para funcionar</p>
+<p class="body-text">2. <strong>Imagen:</strong> plantilla de solo lectura para crear contenedores</p>
+<p class="body-text">3. <strong>Dockerfile:</strong> instrucciones para construir una imagen (FROM, COPY, RUN, CMD, EXPOSE)</p>
+<p class="body-text">4. <strong>Comandos Docker:</strong> build, run, ps, stop, logs, exec</p>
+<p class="body-text">5. <strong>Docker Compose:</strong> levantar multiples servicios con un solo comando</p>
+
+<p class="body-text">### Proximos pasos en el bootcamp:</p>
+
+<p class="body-text">En los siguientes bloques usaremos Docker como base para CI/CD, despliegues automatizados y orquestacion.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">17 / 17</div>
+</section>
+<section class="slide">
+  <div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;bottom:-200px;left:-100px;"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Navegacion</div>
+    <h2 class="headline headline-lg">Continuar con el <span class="gradient-text">bootcamp</span></h2>
+    <div class="nav-links">
+      <a href="dia1-bloque2-git-practico.html" class="nav-link nav-prev"><span class="nav-arrow">&larr;</span><span class="nav-label">Anterior</span><span class="nav-title">Git Practico</span></a>
+      <a href="dia2-bloque1-cicd-fundamentos.html" class="nav-link nav-next"><span class="nav-label">Siguiente</span><span class="nav-title">CI/CD Fundamentos</span><span class="nav-arrow">&rarr;</span></a>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+</section>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+document.addEventListener('keydown',e=>{const sl=document.querySelectorAll('.slide');const c=Math.round(window.scrollY/window.innerHeight);if(['ArrowDown',' ','ArrowRight'].includes(e.key)){e.preventDefault();sl[Math.min(c+1,sl.length-1)].scrollIntoView({behavior:'smooth'});}if(['ArrowUp','ArrowLeft'].includes(e.key)){e.preventDefault();sl[Math.max(c-1,0)].scrollIntoView({behavior:'smooth'});}});
+</script>
+
+</body>
+</html>

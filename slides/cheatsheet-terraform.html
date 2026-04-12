@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terraform — Cheat Sheet</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00a3e0; --accent-2: #6366f1;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00a3e0; --accent-2: #6366f1;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); min-height: 100vh; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(2.5rem, 6vw, 5rem); }
+  .headline-lg { font-size: clamp(1.8rem, 4vw, 3rem); }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .body-text { font-size: 1.1rem; line-height: 1.8; color: var(--text-muted); margin-bottom: 1rem; }
+
+  .bg-glow { position: fixed; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: fixed; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  strong { color: var(--text-primary); }
+
+  .container { max-width: 860px; margin: 0 auto; padding: 6rem 2rem 4rem; position: relative; z-index: 2; }
+
+  .cover { text-align: center; margin-bottom: 4rem; padding-bottom: 3rem; border-bottom: 1px solid var(--border); }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 2rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.4rem; font-style: italic; color: var(--text-muted); margin-top: 0.5rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 1.5rem auto; }
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1rem; }
+
+  .section { margin-bottom: 3rem; }
+
+  .slide-list { list-style: none; padding: 0; margin: 1rem 0 1.5rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.05rem; position: relative; border-bottom: 1px solid var(--border); line-height: 1.6; }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; align-items: center; gap: 0.4rem; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-label { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.05em; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; overflow-x: auto; }
+
+  .slide-table { width: 100%; margin: 1.5rem 0; border-collapse: separate; border-spacing: 0 0.4rem; }
+  .slide-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 0.6rem 1.2rem; text-align: left; }
+  .slide-table td { padding: 1rem 1.2rem; background: var(--bg-card); font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; }
+  .slide-table tr td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; color: var(--text-primary); }
+  .slide-table tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  .back-link { display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--accent-1); text-decoration: none; padding: 0.8rem 1.8rem; border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); border-radius: 100px; transition: all 0.2s; margin-top: 2rem; }
+  .back-link:hover { background: var(--accent-1); color: white; }
+
+  .footer { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.9em; background: var(--bg-card); padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid var(--border); }
+
+  .numbered-list { list-style: none; padding: 0; margin: 1rem 0 1.5rem; counter-reset: step; }
+  .numbered-list li { padding: 0.8rem 0 0.8rem 3rem; color: var(--text-muted); font-size: 1.05rem; position: relative; border-bottom: 1px solid var(--border); line-height: 1.6; counter-increment: step; }
+  .numbered-list li::before { content: counter(step); position: absolute; left: 0; top: 0.65rem; width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: white; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+
+<div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;top:-200px;right:-100px;"></div>
+<div class="bg-glow" style="width:500px;height:500px;background:#6366f1;bottom:-200px;left:-100px;"></div>
+<div class="bg-noise"></div>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed" style="text-decoration:none;"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+<div class="container">
+
+  <div class="cover">
+    <div class="cover-brand">CHEAT SHEET</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">Terraform</span></h1>
+    <p class="cover-subtitle">Referencia rapida</p>
+    <div class="cover-line"></div>
+  </div>
+
+  <!-- Seccion 1: Workflow basico -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">1. Workflow basico</span></h2>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">terminal</span></div>
+      <pre class="terminal-body"><strong style="color:var(--accent-1)">$</strong> terraform init        <span style="color:var(--text-dim)"># Descarga proveedores y modulos</span>
+<strong style="color:var(--accent-1)">$</strong> terraform plan        <span style="color:var(--text-dim)"># Vista previa de cambios (no toca nada)</span>
+<strong style="color:var(--accent-1)">$</strong> terraform apply       <span style="color:var(--text-dim)"># Aplica los cambios de verdad</span>
+<strong style="color:var(--accent-1)">$</strong> terraform destroy     <span style="color:var(--text-dim)"># Elimina toda la infraestructura creada</span></pre>
+    </div>
+    <p class="body-text">Regla de oro: <strong>siempre revisa el plan antes de hacer apply</strong>.</p>
+  </div>
+
+  <!-- Seccion 2: Estructura de archivos -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">2. Estructura de archivos</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Un proyecto Terraform tipico tiene esta estructura:</p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">estructura</span></div>
+      <pre class="terminal-body">mi-proyecto/
+├── main.tf              <span style="color:var(--text-dim)"># Recursos principales</span>
+├── variables.tf         <span style="color:var(--text-dim)"># Declaracion de variables</span>
+├── outputs.tf           <span style="color:var(--text-dim)"># Valores de salida</span>
+├── terraform.tfvars     <span style="color:var(--text-dim)"># Valores de las variables</span>
+├── .terraform/          <span style="color:var(--text-dim)"># Proveedores descargados (no commitear)</span>
+└── terraform.tfstate    <span style="color:var(--text-dim)"># Estado actual de la infra (no editar a mano)</span></pre>
+    </div>
+    <p class="body-text"><strong>.terraform/</strong> y <strong>terraform.tfstate</strong> se generan automaticamente. Anade <code>.terraform/</code> y <code>*.tfstate*</code> a tu <code>.gitignore</code>.</p>
+  </div>
+
+  <!-- Seccion 3: HCL basico -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">3. HCL basico</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Los bloques fundamentales del lenguaje de configuracion de Terraform:</p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">hcl</span></div>
+      <pre class="terminal-body"><span style="color:var(--text-dim)"># --- PROVIDER: que plataforma usamos ---</span>
+provider "aws" {
+  region = "eu-west-1"
+}
+
+<span style="color:var(--text-dim)"># --- RESOURCE: lo que queremos crear ---</span>
+resource "aws_instance" "web" {
+  ami           = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.micro"
+  tags = {
+    Name = "mi-servidor"
+  }
+}
+
+<span style="color:var(--text-dim)"># --- VARIABLE: parametro de entrada ---</span>
+variable "entorno" {
+  type        = string
+  default     = "dev"
+  description = "Nombre del entorno"
+}
+
+<span style="color:var(--text-dim)"># --- OUTPUT: valor de salida ---</span>
+output "ip_publica" {
+  value = aws_instance.web.public_ip
+}
+
+<span style="color:var(--text-dim)"># --- DATA: leer datos existentes (sin crear nada) ---</span>
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners      = ["099720109477"]
+}
+
+<span style="color:var(--text-dim)"># --- LOCALS: variables calculadas internas ---</span>
+locals {
+  nombre_completo = "${var.entorno}-web-server"
+}</pre>
+    </div>
+  </div>
+
+  <!-- Seccion 4: Variables -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">4. Variables</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Tipos de variables disponibles y como usarlas:</p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">hcl</span></div>
+      <pre class="terminal-body"><span style="color:var(--text-dim)"># string</span>
+variable "nombre" {
+  type    = string
+  default = "mi-app"
+}
+
+<span style="color:var(--text-dim)"># number</span>
+variable "puerto" {
+  type    = number
+  default = 8080
+}
+
+<span style="color:var(--text-dim)"># bool</span>
+variable "produccion" {
+  type    = bool
+  default = false
+}
+
+<span style="color:var(--text-dim)"># list</span>
+variable "zonas" {
+  type    = list(string)
+  default = ["eu-west-1a", "eu-west-1b"]
+}
+
+<span style="color:var(--text-dim)"># map</span>
+variable "tags" {
+  type = map(string)
+  default = {
+    equipo  = "devops"
+    entorno = "dev"
+  }
+}
+
+<span style="color:var(--text-dim)"># --- Usar variables en un recurso ---</span>
+resource "local_file" "config" {
+  content  = "App: ${var.nombre}, Puerto: ${var.puerto}"
+  filename = "${var.nombre}.conf"
+}</pre>
+    </div>
+    <p class="body-text">Prioridad de asignacion (de menor a mayor): <strong>default</strong> &rarr; <strong>terraform.tfvars</strong> &rarr; <strong>-var-file</strong> &rarr; <strong>-var</strong> &rarr; <strong>TF_VAR_*</strong></p>
+  </div>
+
+  <!-- Seccion 5: State -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">5. State</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Terraform guarda el estado de la infraestructura en <code>terraform.tfstate</code>. Comandos para gestionarlo:</p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">terminal</span></div>
+      <pre class="terminal-body"><span style="color:var(--text-dim)"># Listar todos los recursos en el estado</span>
+<strong style="color:var(--accent-1)">$</strong> terraform state list
+local_file.saludo
+docker_container.nginx
+
+<span style="color:var(--text-dim)"># Ver detalle de un recurso concreto</span>
+<strong style="color:var(--accent-1)">$</strong> terraform state show local_file.saludo
+# resource "local_file" "saludo" {
+#     content  = "Hola mundo"
+#     filename = "saludo.txt"
+#     id       = "abc123..."
+# }
+
+<span style="color:var(--text-dim)"># Eliminar un recurso del estado (sin destruirlo)</span>
+<strong style="color:var(--accent-1)">$</strong> terraform state rm local_file.saludo
+Removed local_file.saludo
+
+<span style="color:var(--text-dim)"># Ver el estado completo en formato JSON</span>
+<strong style="color:var(--accent-1)">$</strong> terraform show</pre>
+    </div>
+    <p class="body-text"><strong>Nunca edites</strong> el fichero <code>terraform.tfstate</code> a mano. Usa siempre los comandos <code>terraform state</code>.</p>
+  </div>
+
+  <!-- Seccion 6: Providers utiles -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">6. Providers utiles</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Terraform soporta cientos de proveedores. Estos son los mas habituales:</p>
+    <table class="slide-table">
+      <tr><th>Provider</th><th>Para que sirve</th><th>Ejemplo</th></tr>
+      <tr><td>local</td><td>Crear archivos locales</td><td>local_file</td></tr>
+      <tr><td>docker</td><td>Gestionar contenedores Docker</td><td>docker_container, docker_image</td></tr>
+      <tr><td>aws</td><td>Amazon Web Services</td><td>aws_instance, aws_s3_bucket</td></tr>
+      <tr><td>azurerm</td><td>Microsoft Azure</td><td>azurerm_resource_group, azurerm_linux_virtual_machine</td></tr>
+      <tr><td>google</td><td>Google Cloud Platform</td><td>google_compute_instance, google_storage_bucket</td></tr>
+    </table>
+    <p class="body-text">Busca mas en <strong>registry.terraform.io</strong></p>
+  </div>
+
+  <!-- Seccion 7: Flags utiles -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">7. Flags utiles</span></h2>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">terminal</span></div>
+      <pre class="terminal-body"><span style="color:var(--text-dim)"># Aplicar sin pedir confirmacion (cuidado en produccion)</span>
+<strong style="color:var(--accent-1)">$</strong> terraform apply -auto-approve
+
+<span style="color:var(--text-dim)"># Pasar una variable desde la linea de comandos</span>
+<strong style="color:var(--accent-1)">$</strong> terraform apply -var="entorno=prod"
+
+<span style="color:var(--text-dim)"># Usar un fichero de variables personalizado</span>
+<strong style="color:var(--accent-1)">$</strong> terraform apply -var-file="produccion.tfvars"
+
+<span style="color:var(--text-dim)"># Aplicar solo a un recurso concreto</span>
+<strong style="color:var(--accent-1)">$</strong> terraform apply -target=local_file.saludo
+
+<span style="color:var(--text-dim)"># Formatear el codigo HCL automaticamente</span>
+<strong style="color:var(--accent-1)">$</strong> terraform fmt
+
+<span style="color:var(--text-dim)"># Validar la sintaxis sin ejecutar nada</span>
+<strong style="color:var(--accent-1)">$</strong> terraform validate</pre>
+    </div>
+  </div>
+
+  <!-- Seccion 8: Flujo tipico -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">8. Flujo tipico</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Asi es el dia a dia trabajando con Terraform:</p>
+    <ol class="numbered-list">
+      <li>Crear directorio del proyecto y escribir los ficheros <code>.tf</code></li>
+      <li>Ejecutar <code>terraform init</code> para descargar proveedores</li>
+      <li>Ejecutar <code>terraform fmt</code> para formatear el codigo</li>
+      <li>Ejecutar <code>terraform validate</code> para comprobar la sintaxis</li>
+      <li>Ejecutar <code>terraform plan</code> y revisar los cambios propuestos</li>
+      <li>Ejecutar <code>terraform apply</code> para crear la infraestructura</li>
+      <li>Verificar que los recursos se han creado correctamente</li>
+      <li>Commitear los ficheros <code>.tf</code> a Git (nunca el <code>.tfstate</code>)</li>
+      <li>Cuando ya no necesites la infra: <code>terraform destroy</code></li>
+    </ol>
+  </div>
+
+  <div style="text-align:center;padding-top:2rem;border-top:1px solid var(--border);">
+    <a href="index.html" class="back-link">&larr; Volver al indice</a>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span class="logo">carlos<strong>palanca</strong>.es</span> &middot; Bootcamp DevOps 2026
+</div>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArgoCD — Cheat Sheet</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); }
+
+  .slide { min-height: 100vh; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; padding: 4rem; position: relative; overflow: hidden; }
+  .slide-inner { max-width: 1100px; width: 100%; z-index: 2; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(3rem, 8vw, 6.5rem); }
+  .headline-lg { font-size: clamp(2rem, 5vw, 4rem); }
+  .headline-md { font-size: clamp(1.5rem, 3vw, 2.5rem); }
+  .body-text { font-size: 1.15rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1.5rem; }
+  .slide-num { position: absolute; bottom: 2rem; right: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-dim); }
+  .slide-footer { position: absolute; bottom: 2rem; left: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); }
+
+  .bg-glow { position: absolute; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: absolute; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+  .bg-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+  .slide-cover { text-align: center; }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.8rem; font-style: italic; color: var(--text-muted); margin-top: 1rem; margin-bottom: 3rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 2rem auto; }
+  .cover-meta { display: flex; gap: 2rem; justify-content: center; font-size: 0.9rem; color: var(--text-dim); }
+
+  .slide-list { list-style: none; padding: 0; margin-top: 1rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.1rem; position: relative; border-bottom: 1px solid var(--border); }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-left: auto; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; }
+
+  .slide-table { width: 100%; margin: 1.5rem 0; border-collapse: separate; border-spacing: 0 0.4rem; }
+  .slide-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 0.6rem 1.2rem; text-align: left; }
+  .slide-table td { padding: 1rem 1.2rem; background: var(--bg-card); font-size: 1rem; color: var(--text-muted); }
+  .slide-table tr td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; color: var(--text-primary); }
+  .slide-table tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  strong { color: var(--text-primary); }
+
+  .alert { background: var(--bg-card); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); border-radius: 14px; padding: 1.5rem; margin: 1.5rem 0; }
+  .alert-title { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-1); margin-bottom: 0.5rem; }
+
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: white; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 600; margin-right: 0.75rem; flex-shrink: 0; }
+
+  .nav-links { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem; }
+  .nav-link { display: flex; flex-direction: column; gap: 0.3rem; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; text-decoration: none; color: var(--text-primary); transition: border-color 0.3s, transform 0.2s; }
+  .nav-link:hover { border-color: var(--accent-1); transform: translateY(-3px); }
+  .nav-prev { text-align: left; }
+  .nav-next { text-align: right; }
+  .nav-arrow { font-size: 1.5rem; color: var(--accent-1); }
+  .nav-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); }
+  .nav-title { font-family: 'Instrument Serif', serif; font-size: 1.4rem; }
+
+  @media print { .slide { page-break-after: always; } .theme-toggle, .logo-fixed { display: none; } html { scroll-snap-type: none; } }
+</style>
+</head>
+<body>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed" style="text-decoration:none;"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+<!-- SLIDE 1: COVER -->
+<section class="slide slide-cover">
+  <div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;top:-200px;right:-100px;"></div><div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-200px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="cover-brand">Cheat Sheet</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">ArgoCD</span></h1>
+    <p class="cover-subtitle">Referencia rapida</p>
+    <div class="cover-line"></div>
+  </div>
+  <div class="slide-num">01 / 09</div>
+</section>
+
+<!-- SLIDE 2: INSTALACION -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Instalacion</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Instalar ArgoCD en el cluster</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body"># Crear namespace dedicado
+kubectl create namespace argocd
+
+# Instalar ArgoCD desde el manifiesto oficial
+kubectl apply -n argocd \
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+# Verificar que los pods estan corriendo
+kubectl get pods -n argocd
+# Debeis ver 5-7 pods en estado Running</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">02 / 09</div>
+</section>
+
+<!-- SLIDE 3: ACCESO A LA UI -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Acceso a la UI</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Acceder al dashboard web</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><strong>Obtener la contrasena del admin:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl -n argocd get secret argocd-initial-admin-secret \
+  -o jsonpath="{.data.password}" | base64 -d</pre></div>
+
+      <p class="body-text"><strong>Exponer el servidor con port-forward:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl port-forward svc/argocd-server -n argocd 8443:443</pre></div>
+
+      <p class="body-text"><strong>Abrir en el navegador:</strong> <code>https://localhost:8443</code></p>
+      <ul class="slide-list">
+        <li><strong>Usuario:</strong> <code>admin</code></li>
+        <li><strong>Contrasena:</strong> la obtenida con el comando anterior</li>
+      </ul>
+
+      <div class="alert">
+        <div class="alert-title">Nota</div>
+        <p class="body-text">El navegador mostrara un aviso de certificado. Aceptadlo con Advanced &gt; Proceed.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">03 / 09</div>
+</section>
+
+<!-- SLIDE 4: CLI -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;top:-150px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">CLI</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Comandos esenciales del CLI</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body"># Iniciar sesion contra el servidor
+argocd login localhost:8443 --insecure
+
+# Listar todas las aplicaciones
+argocd app list
+
+# Ver detalle de una aplicacion
+argocd app get mi-app
+
+# Sincronizar (desplegar) una aplicacion
+argocd app sync mi-app
+
+# Eliminar una aplicacion
+argocd app delete mi-app
+
+# Ver diferencias entre Git y cluster
+argocd app diff mi-app</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">04 / 09</div>
+</section>
+
+<!-- SLIDE 5: CREAR APPLICATION VIA UI -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Application via UI</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Crear Application desde la UI</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <ul class="slide-list">
+        <li><span class="step-num">1</span> Click en <strong>NEW APP</strong> en el dashboard</li>
+        <li><span class="step-num">2</span> Rellenar <strong>Application Name</strong> y seleccionar <strong>Project: default</strong></li>
+        <li><span class="step-num">3</span> Elegir <strong>Sync Policy</strong>: Manual o Automatic</li>
+        <li><span class="step-num">4</span> En <strong>Repository URL</strong> pegar la URL del repo Git</li>
+        <li><span class="step-num">5</span> Indicar el <strong>Path</strong> dentro del repo donde estan los manifiestos (ej: <code>k8s/</code>)</li>
+        <li><span class="step-num">6</span> En <strong>Cluster URL</strong> usar <code>https://kubernetes.default.svc</code> y elegir el <strong>Namespace</strong></li>
+        <li><span class="step-num">7</span> Click en <strong>CREATE</strong> y luego <strong>SYNC</strong> para desplegar</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">05 / 09</div>
+</section>
+
+<!-- SLIDE 6: CREAR APPLICATION VIA YAML -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Application via YAML</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Crear Application con manifiesto</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">yaml</span></div><pre class="terminal-body">apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mi-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/usuario/repo.git
+    targetRevision: HEAD
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true</pre></div>
+
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl apply -f application.yaml</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">06 / 09</div>
+</section>
+
+<!-- SLIDE 7: SYNC Y ROLLBACK -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-150px;right:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Sync y Rollback</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Sincronizar y revertir</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body"># Sincronizar la aplicacion con el estado de Git
+argocd app sync mi-app
+
+# Forzar sync (elimina recursos huerfanos y recrea)
+argocd app sync mi-app --force
+
+# Ver historial de despliegues
+argocd app history mi-app
+
+# Rollback a una revision anterior (ej: revision 2)
+argocd app rollback mi-app 2</pre></div>
+
+      <div class="alert">
+        <div class="alert-title">Importante</div>
+        <p class="body-text">El rollback revierte el cluster a un estado anterior, pero <strong>no cambia Git</strong>. Si el auto-sync esta activo, ArgoCD volvera a sincronizar desde Git. Para un rollback permanente, revertid el commit en el repositorio.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">07 / 09</div>
+</section>
+
+<!-- SLIDE 8: FLUJO TIPICO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;top:-150px;right:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Flujo tipico</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Workflow GitOps con ArgoCD</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <ul class="slide-list">
+        <li><span class="step-num">1</span> Desarrollador hace <strong>cambios</strong> en los manifiestos YAML del repositorio Git</li>
+        <li><span class="step-num">2</span> Se crea un <strong>Pull Request</strong> y se revisa el cambio</li>
+        <li><span class="step-num">3</span> Al hacer <strong>merge a main</strong>, Git queda actualizado con el estado deseado</li>
+        <li><span class="step-num">4</span> ArgoCD <strong>detecta la diferencia</strong> entre Git y el cluster (OutOfSync)</li>
+        <li><span class="step-num">5</span> ArgoCD <strong>sincroniza automaticamente</strong> (o manualmente con click en SYNC)</li>
+        <li><span class="step-num">6</span> El cluster refleja el estado deseado &mdash; la app aparece como <strong>Synced</strong></li>
+        <li><span class="step-num">7</span> Si algo falla, <strong>revertir el commit en Git</strong> y ArgoCD aplica el rollback</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">08 / 09</div>
+</section>
+
+<!-- SLIDE 9: NAVEGACION -->
+<section class="slide">
+  <div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;bottom:-200px;left:-100px;"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Navegacion</div>
+    <h2 class="headline headline-lg">Volver al <span class="gradient-text">bootcamp</span></h2>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link nav-prev"><span class="nav-arrow">&larr;</span><span class="nav-label">Menu</span><span class="nav-title">Indice del Bootcamp</span></a>
+      <a href="dia3-bloque4-gitops-argocd.html" class="nav-link nav-next"><span class="nav-label">Relacionado</span><span class="nav-title">GitOps con ArgoCD</span><span class="nav-arrow">&rarr;</span></a>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+</section>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+document.addEventListener('keydown',e=>{const sl=document.querySelectorAll('.slide');const c=Math.round(window.scrollY/window.innerHeight);if(['ArrowDown',' ','ArrowRight'].includes(e.key)){e.preventDefault();sl[Math.min(c+1,sl.length-1)].scrollIntoView({behavior:'smooth'});}if(['ArrowUp','ArrowLeft'].includes(e.key)){e.preventDefault();sl[Math.max(c-1,0)].scrollIntoView({behavior:'smooth'});}});
+</script>
+
+</body>
+</html>

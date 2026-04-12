@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Repaso Git + Setup — Bootcamp DevOps 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #e4007c; --accent-2: #00a3e0;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #e4007c; --accent-2: #00a3e0;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); }
+
+  .slide { min-height: 100vh; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; padding: 4rem; position: relative; overflow: hidden; }
+  .slide-inner { max-width: 1100px; width: 100%; z-index: 2; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(3rem, 8vw, 6.5rem); }
+  .headline-lg { font-size: clamp(2rem, 5vw, 4rem); }
+  .body-text { font-size: 1.15rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1.5rem; }
+  .slide-num { position: absolute; bottom: 2rem; right: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-dim); }
+  .slide-footer { position: absolute; bottom: 2rem; left: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); }
+
+  .bg-glow { position: absolute; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: absolute; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+  .bg-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+  .slide-cover { text-align: center; }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.8rem; font-style: italic; color: var(--text-muted); margin-top: 1rem; margin-bottom: 3rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 2rem auto; }
+  .cover-meta { display: flex; gap: 2rem; justify-content: center; font-size: 0.9rem; color: var(--text-dim); }
+
+  .slide-list { list-style: none; padding: 0; margin-top: 1rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.1rem; position: relative; border-bottom: 1px solid var(--border); }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; }
+
+  .slide-table { width: 100%; margin: 1.5rem 0; border-collapse: separate; border-spacing: 0 0.4rem; }
+  .slide-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 0.6rem 1.2rem; text-align: left; }
+  .slide-table td { padding: 1rem 1.2rem; background: var(--bg-card); font-size: 1rem; color: var(--text-muted); }
+  .slide-table tr td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; color: var(--text-primary); }
+  .slide-table tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  strong { color: var(--text-primary); }
+
+  .nav-links { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem; }
+  .nav-link { display: flex; flex-direction: column; gap: 0.3rem; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; text-decoration: none; color: var(--text-primary); transition: border-color 0.3s, transform 0.2s; }
+  .nav-link:hover { border-color: var(--accent-1); transform: translateY(-3px); }
+  .nav-prev { text-align: left; }
+  .nav-next { text-align: right; }
+  .nav-arrow { font-size: 1.5rem; color: var(--accent-1); }
+  .nav-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); }
+  .nav-title { font-family: 'Instrument Serif', serif; font-size: 1.4rem; }
+
+  @media print { .slide { page-break-after: always; } .theme-toggle, .logo-fixed { display: none; } html { scroll-snap-type: none; } }
+</style>
+</head>
+<body>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed" style="text-decoration:none;"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+
+<section class="slide slide-cover">
+  <div class="bg-glow" style="width:600px;height:600px;background:#e4007c;top:-200px;right:-100px;"></div><div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;bottom:-200px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="cover-brand">T-Systems &middot; Universidad de Granada &middot; 2026</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">Repaso Git + Setup</span></h1>
+    <p class="cover-subtitle">Bootcamp DevOps 2026 &mdash; Dia 1 &mdash; Bloque 2</p>
+    <div class="cover-line"></div>
+    <div class="cover-meta"><span>Carlos Palanca</span><span>&middot;</span><span>Abril 2026</span></div>
+  </div>
+  <div class="slide-num">01 / 05</div>
+</section>
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Workflow</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Workflow del bootcamp</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text">Este flujo lo repetiremos en cada bloque, cada dia:</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">1. git checkout -b feature/nombre    # Crear rama
+2. git add . && git commit -m "..."  # Guardar cambios
+3. git push -u origin feature/nombre # Subir a GitHub
+4. Abrir Pull Request en GitHub      # Pedir revision
+5. Companero revisa y aprueba        # Code review
+6. Merge a main                      # Fusionar</pre></div>
+
+<table class="slide-table"><thead><tr><th>Elemento</th><th>Convencion</th><th>Ejemplo</th></tr></thead><tbody><tr><td>Ramas</td><td>feature/descripcion-corta</td><td>feature/dockerfile-backend</td></tr><tr><td>Commits</td><td>Imperativo, en espanol</td><td>Anade Dockerfile para la API</td></tr><tr><td>PRs</td><td>Titulo corto + descripcion</td><td>Dockerizar backend</td></tr></tbody></table>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">02 / 05</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Cheat sheet</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Cheat sheet</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">git status                # Estado actual (usadlo SIEMPRE)
+git add .                 # Preparar cambios
+git commit -m "mensaje"   # Guardar foto
+git push                  # Subir a GitHub
+git pull                  # Descargar cambios
+git checkout -b nombre    # Crear rama y moverte
+git checkout main         # Volver a main
+git merge nombre          # Fusionar rama
+git log --oneline         # Historial resumido</pre></div>
+
+<p class="body-text"><strong>Conflictos:</strong> abrir archivo &rarr; elegir texto &rarr; borrar marcas &rarr; <code>git add</code> + <code>git commit</code>. No es un error, es normal.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">03 / 05</div>
+</section>
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Mini-lab</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Verificacion de entorno</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <strong>10 minutos &mdash; individual</strong>
+
+<table class="slide-table"><thead><tr><th>Paso</th><th>Que haceis</th></tr></thead><tbody><tr><td>1</td><td>Clonar el repo del bootcamp</td></tr><tr><td>2</td><td>Crear rama setup/tu-nombre</td></tr><tr><td>3</td><td>Crear archivo de presentacion</td></tr><tr><td>4</td><td>Commit + push + abrir PR</td></tr></tbody></table>
+
+<p class="body-text">Si todo funciona sin errores: estais listos para Docker.</p>
+<p class="body-text">Si algo falla: mejor pillarlo ahora que en medio de un lab.</p>
+<div style="margin-top:2rem;text-align:center;"><a href="dia1-bloque2-git-practico-lab.html" style="display:inline-block;padding:1rem 2.5rem;background:linear-gradient(135deg, var(--accent-1), var(--accent-2));color:white;text-decoration:none;border-radius:100px;font-family:'JetBrains Mono',monospace;font-size:0.9rem;letter-spacing:0.05em;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">Abrir laboratorio &rarr;</a></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">04 / 05</div>
+</section>
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;top:-150px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Siguiente</div>
+    <h2 class="headline headline-lg">Siguiente bloque: <span class="gradient-text">Docker Basico</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+<p class="body-text">Contenedores, imagenes, volumenes, redes.</p>
+<p class="body-text">Vamos a desplegar aplicaciones reales sin instalar nada en vuestro sistema.</p>
+    </div>
+    <div class="nav-links">
+      <a href="dia1-bloque1-cultura-devops.html" class="nav-link nav-prev"><span class="nav-arrow">&larr;</span><span class="nav-label">Anterior</span><span class="nav-title">Cultura DevOps</span></a>
+      <a href="dia1-bloque3-docker-basico.html" class="nav-link nav-next"><span class="nav-label">Siguiente</span><span class="nav-title">Docker Basico</span><span class="nav-arrow">&rarr;</span></a>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">05 / 05</div>
+</section>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+document.addEventListener('keydown',e=>{const sl=document.querySelectorAll('.slide');const c=Math.round(window.scrollY/window.innerHeight);if(['ArrowDown',' ','ArrowRight'].includes(e.key)){e.preventDefault();sl[Math.min(c+1,sl.length-1)].scrollIntoView({behavior:'smooth'});}if(['ArrowUp','ArrowLeft'].includes(e.key)){e.preventDefault();sl[Math.max(c-1,0)].scrollIntoView({behavior:'smooth'});}});
+</script>
+
+</body>
+</html>

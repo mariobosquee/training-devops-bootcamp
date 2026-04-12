@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub Actions — Cheat Sheet</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); min-height: 100vh; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(2.5rem, 6vw, 5rem); }
+  .headline-lg { font-size: clamp(1.8rem, 4vw, 3rem); }
+  .headline-md { font-size: clamp(1.4rem, 3vw, 2.2rem); }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .body-text { font-size: 1.15rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 0.5rem; }
+  strong { color: var(--text-primary); }
+
+  .bg-glow { position: fixed; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: fixed; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; text-decoration: none; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 6rem 2rem 4rem; position: relative; z-index: 2; }
+
+  .cover { text-align: center; margin-bottom: 4rem; }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 2rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.4rem; font-style: italic; color: var(--text-muted); margin-top: 0.5rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 1.5rem auto; }
+
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1.5rem; }
+
+  section { margin-bottom: 3.5rem; }
+  section h2 { margin-bottom: 1.2rem; }
+  section h3 { font-family: 'DM Sans', sans-serif; font-size: 1.2rem; font-weight: 700; margin: 1.5rem 0 0.8rem; color: var(--text-primary); }
+
+  .slide-list { list-style: none; padding: 0; margin-top: 1rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.1rem; position: relative; border-bottom: 1px solid var(--border); }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; align-items: center; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-left: auto; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; }
+
+  .slide-table { width: 100%; margin: 1.5rem 0; border-collapse: separate; border-spacing: 0 0.4rem; }
+  .slide-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 0.6rem 1.2rem; text-align: left; }
+  .slide-table td { padding: 1rem 1.2rem; background: var(--bg-card); font-size: 1rem; color: var(--text-muted); }
+  .slide-table tr td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; color: var(--text-primary); }
+  .slide-table tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  blockquote { border-left: 3px solid var(--accent-1); padding: 1rem 1.5rem; margin: 1.5rem 0; background: var(--bg-card); border-radius: 0 12px 12px 0; color: var(--text-muted); font-size: 1.1rem; font-style: italic; }
+
+  .back-link { display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--accent-1); text-decoration: none; padding: 0.6rem 1.5rem; border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); border-radius: 100px; transition: all 0.2s; margin-top: 2rem; }
+  .back-link:hover { background: var(--accent-1); color: white; }
+
+  .footer { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.9em; background: var(--bg-card); padding: 0.15rem 0.4rem; border-radius: 4px; color: var(--accent-2); }
+
+  .yaml-comment { color: var(--text-dim); }
+  .yaml-key { color: var(--accent-1); }
+
+  .numbered-flow { list-style: none; padding: 0; margin-top: 1rem; counter-reset: flow; }
+  .numbered-flow li { padding: 0.8rem 0 0.8rem 3rem; color: var(--text-muted); font-size: 1.1rem; position: relative; border-bottom: 1px solid var(--border); counter-increment: flow; }
+  .numbered-flow li::before { content: counter(flow); position: absolute; left: 0; top: 0.65rem; width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: white; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+
+<div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;top:-200px;right:-100px;"></div>
+<div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-200px;left:-100px;"></div>
+<div class="bg-noise"></div>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+<div class="container">
+
+  <div class="cover">
+    <div class="cover-brand">Cheat Sheet</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">GitHub Actions</span></h1>
+    <p class="cover-subtitle">Referencia rapida</p>
+    <div class="cover-line"></div>
+  </div>
+
+  <!-- 1. Estructura de un workflow -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">1. Estructura de un workflow</span></h2>
+    <p class="body-text">Todo workflow vive en <code>.github/workflows/nombre.yml</code> y sigue esta estructura basica:</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-label">yaml</span>
+      </div>
+      <div class="terminal-body"># Nombre visible en la pestana Actions
+name: CI Pipeline
+
+# Cuando se ejecuta
+on:
+  push:
+    branches: [main]
+
+# Trabajos a ejecutar
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout codigo
+        uses: actions/checkout@v4
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Ejecutar tests
+        run: npm test</div>
+    </div>
+    <ul class="slide-list">
+      <li><code>name:</code> &mdash; Nombre descriptivo del workflow.</li>
+      <li><code>on:</code> &mdash; Evento(s) que lo disparan.</li>
+      <li><code>jobs:</code> &mdash; Uno o mas trabajos. Cada job corre en su propia VM.</li>
+      <li><code>runs-on:</code> &mdash; Sistema operativo (<code>ubuntu-latest</code>, <code>windows-latest</code>, <code>macos-latest</code>).</li>
+      <li><code>steps:</code> &mdash; Lista ordenada de pasos dentro de un job.</li>
+      <li><code>uses:</code> &mdash; Usa una action del marketplace.</li>
+      <li><code>run:</code> &mdash; Ejecuta un comando de terminal.</li>
+    </ul>
+  </section>
+
+  <!-- 2. Triggers -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">2. Triggers</span></h2>
+    <p class="body-text">Los eventos que disparan un workflow:</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-label">yaml</span>
+      </div>
+      <div class="terminal-body"># Push a ramas especificas
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+
+# Pull request
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+# Ejecucion programada (cron)
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # Cada lunes a las 6:00 UTC
+
+# Ejecucion manual desde la UI
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Entorno destino'
+        required: true
+        default: 'staging'
+
+# Combinacion de triggers
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:</div>
+    </div>
+  </section>
+
+  <!-- 3. Acciones comunes -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">3. Acciones comunes</span></h2>
+    <p class="body-text">Las actions mas utilizadas del marketplace:</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-label">yaml</span>
+      </div>
+      <div class="terminal-body"># Clonar el repositorio
+- uses: actions/checkout@v4
+
+# Configurar Node.js
+- uses: actions/setup-node@v4
+  with:
+    node-version: '20'
+    cache: 'npm'
+
+# Configurar Python
+- uses: actions/setup-python@v5
+  with:
+    python-version: '3.12'
+    cache: 'pip'
+
+# Cache generico de dependencias
+- uses: actions/cache@v4
+  with:
+    path: ~/.cache/pip
+    key: $&#123;&#123; runner.os &#125;&#125;-pip-$&#123;&#123; hashFiles('**/requirements.txt') &#125;&#125;
+    restore-keys: |
+      $&#123;&#123; runner.os &#125;&#125;-pip-
+
+# Build y push de imagen Docker a un registry
+- uses: docker/build-push-action@v5
+  with:
+    context: .
+    push: true
+    tags: ghcr.io/$&#123;&#123; github.repository &#125;&#125;:latest</div>
+    </div>
+  </section>
+
+  <!-- 4. Secrets y variables -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">4. Secrets y variables</span></h2>
+    <p class="body-text">Gestionar credenciales y configuracion de forma segura:</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-label">yaml</span>
+      </div>
+      <div class="terminal-body"># Variables de entorno a nivel de job
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: production
+      API_URL: $&#123;&#123; vars.API_URL &#125;&#125;
+
+    steps:
+      # Token automatico de GitHub (no requiere configuracion)
+      - name: Login a GHCR
+        run: echo $&#123;&#123; secrets.GITHUB_TOKEN &#125;&#125; | docker login ghcr.io -u $&#123;&#123; github.actor &#125;&#125; --password-stdin
+
+      # Secret personalizado
+      - name: Deploy
+        run: ./deploy.sh
+        env:
+          AWS_ACCESS_KEY: $&#123;&#123; secrets.AWS_ACCESS_KEY &#125;&#125;
+          AWS_SECRET_KEY: $&#123;&#123; secrets.AWS_SECRET_KEY &#125;&#125;
+
+      # Variable de repositorio (no sensible)
+      - name: Configurar entorno
+        run: echo "Desplegando en $&#123;&#123; vars.DEPLOY_ENV &#125;&#125;"</div>
+    </div>
+    <blockquote>
+      <strong>Donde configurar:</strong> Repositorio &gt; Settings &gt; Secrets and variables &gt; Actions. Los <strong>secrets</strong> se enmascaran en los logs. Las <strong>variables</strong> (<code>vars.</code>) son visibles y se usan para configuracion no sensible.
+    </blockquote>
+  </section>
+
+  <!-- 5. Expresiones utiles -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">5. Expresiones utiles</span></h2>
+    <p class="body-text">Condicionales, dependencias entre jobs y matrices:</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-label">yaml</span>
+      </div>
+      <div class="terminal-body"># Condicional: ejecutar solo en main
+- name: Deploy
+  if: github.ref == 'refs/heads/main'
+  run: ./deploy.sh
+
+# Condicional: ejecutar solo si el job anterior tuvo exito
+- name: Notificar
+  if: success()
+  run: echo "Todo OK"
+
+# Condicional: ejecutar siempre (incluso si falla algo)
+- name: Cleanup
+  if: always()
+  run: docker system prune -f
+
+# Condicional: ejecutar solo si fallo
+- name: Alerta de fallo
+  if: failure()
+  run: curl -X POST $&#123;&#123; vars.SLACK_WEBHOOK &#125;&#125;
+
+# Dependencia entre jobs (needs)
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm test
+
+  deploy:
+    needs: test        # Espera a que "test" termine con exito
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./deploy.sh
+
+  notify:
+    needs: [test, deploy]   # Espera a ambos jobs
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Pipeline completo"
+
+# Strategy matrix: ejecutar en multiples configuraciones
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: $&#123;&#123; matrix.node-version &#125;&#125;
+      - run: npm test</div>
+    </div>
+  </section>
+
+  <!-- 6. Comandos utiles -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">6. Comandos utiles</span></h2>
+    <p class="body-text">Diferentes formas de ejecutar comandos en un step:</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-label">yaml</span>
+      </div>
+      <div class="terminal-body"># Comando simple
+- run: npm install
+
+# Comando con nombre descriptivo
+- name: Instalar dependencias
+  run: npm ci
+
+# Comando multilinea
+- name: Build y test
+  run: |
+    npm ci
+    npm run build
+    npm test
+
+# Cambiar directorio de trabajo
+- name: Tests del backend
+  run: npm test
+  working-directory: ./backend
+
+# Usar otra shell
+- name: Script en Python
+  run: |
+    import json
+    print(json.dumps({"status": "ok"}))
+  shell: python
+
+# Guardar output para otros steps
+- name: Obtener version
+  id: version
+  run: echo "tag=v1.0.0" >> $GITHUB_OUTPUT
+
+- name: Usar output anterior
+  run: echo "Version es $&#123;&#123; steps.version.outputs.tag &#125;&#125;"</div>
+    </div>
+  </section>
+
+  <!-- 7. Flujo tipico -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">7. Flujo tipico</span></h2>
+    <p class="body-text">Un pipeline CI/CD completo suele seguir este orden:</p>
+    <ol class="numbered-flow">
+      <li><strong>Checkout</strong> &mdash; Clonar el codigo del repositorio.</li>
+      <li><strong>Setup</strong> &mdash; Instalar el runtime necesario (Node, Python, Go...).</li>
+      <li><strong>Install</strong> &mdash; Instalar dependencias del proyecto.</li>
+      <li><strong>Lint</strong> &mdash; Verificar estilo y calidad del codigo.</li>
+      <li><strong>Test</strong> &mdash; Ejecutar la suite de tests automatizados.</li>
+      <li><strong>Build</strong> &mdash; Compilar / construir la imagen Docker.</li>
+      <li><strong>Push</strong> &mdash; Subir la imagen al registry (GHCR, Docker Hub...).</li>
+      <li><strong>Deploy</strong> &mdash; Desplegar al entorno destino (staging, produccion).</li>
+      <li><strong>Notify</strong> &mdash; Enviar notificacion al equipo (Slack, email...).</li>
+    </ol>
+  </section>
+
+  <!-- 8. Ejemplo minimo: CI basico -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">8. Ejemplo minimo: CI basico</span></h2>
+    <p class="body-text">Un workflow completo listo para copiar y pegar:</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-label">yaml</span>
+      </div>
+      <div class="terminal-body">name: CI Basico
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout codigo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Build imagen Docker
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker build -t ghcr.io/$&#123;&#123; github.repository &#125;&#125;:$&#123;&#123; github.sha &#125;&#125; .
+          echo $&#123;&#123; secrets.GITHUB_TOKEN &#125;&#125; | docker login ghcr.io -u $&#123;&#123; github.actor &#125;&#125; --password-stdin
+          docker push ghcr.io/$&#123;&#123; github.repository &#125;&#125;:$&#123;&#123; github.sha &#125;&#125;</div>
+    </div>
+  </section>
+
+  <div style="text-align:center; margin-top:3rem;">
+    <a href="index.html" class="back-link">&larr; Volver al indice</a>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span class="logo">carlos<strong>palanca</strong>.es</span> &middot; Bootcamp DevOps 2026
+</div>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deploy CampusEats en K8s — Bootcamp DevOps 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00a3e0; --accent-2: #6366f1;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00a3e0; --accent-2: #6366f1;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); }
+
+  .slide { min-height: 100vh; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; padding: 4rem; position: relative; overflow: hidden; }
+  .slide-inner { max-width: 1100px; width: 100%; z-index: 2; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(3rem, 8vw, 6.5rem); }
+  .headline-lg { font-size: clamp(2rem, 5vw, 4rem); }
+  .headline-md { font-size: clamp(1.5rem, 3vw, 2.5rem); }
+  .body-text { font-size: 1.15rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1.5rem; }
+  .slide-num { position: absolute; bottom: 2rem; right: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-dim); }
+  .slide-footer { position: absolute; bottom: 2rem; left: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); }
+
+  .bg-glow { position: absolute; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: absolute; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+  .bg-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+  .slide-cover { text-align: center; }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.8rem; font-style: italic; color: var(--text-muted); margin-top: 1rem; margin-bottom: 3rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 2rem auto; }
+  .cover-meta { display: flex; gap: 2rem; justify-content: center; font-size: 0.9rem; color: var(--text-dim); }
+
+  .slide-list { list-style: none; padding: 0; margin-top: 1rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.1rem; position: relative; border-bottom: 1px solid var(--border); }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; }
+
+  .slide-table { width: 100%; margin: 1.5rem 0; border-collapse: separate; border-spacing: 0 0.4rem; }
+  .slide-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 0.6rem 1.2rem; text-align: left; }
+  .slide-table td { padding: 1rem 1.2rem; background: var(--bg-card); font-size: 1rem; color: var(--text-muted); }
+  .slide-table tr td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; color: var(--text-primary); }
+  .slide-table tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  strong { color: var(--text-primary); }
+
+  .alert { background: var(--bg-card); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); border-radius: 14px; padding: 1.5rem; margin: 1.5rem 0; }
+  .alert-title { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-1); margin-bottom: 0.5rem; }
+
+  .troubleshoot { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; margin: 1.5rem 0; }
+  .troubleshoot-title { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: #febc2e; margin-bottom: 1rem; }
+  .troubleshoot-item { padding: 0.8rem 0; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .troubleshoot-item:last-child { border-bottom: none; }
+  .troubleshoot-problem { font-size: 0.9rem; color: var(--text-primary); }
+  .troubleshoot-solution { font-size: 0.9rem; color: var(--text-muted); }
+
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: white; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 600; margin-right: 0.75rem; flex-shrink: 0; }
+
+  .nav-links { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem; }
+  .nav-link { display: flex; flex-direction: column; gap: 0.3rem; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; text-decoration: none; color: var(--text-primary); transition: border-color 0.3s, transform 0.2s; }
+  .nav-link:hover { border-color: var(--accent-1); transform: translateY(-3px); }
+  .nav-prev { text-align: left; }
+  .nav-next { text-align: right; }
+  .nav-arrow { font-size: 1.5rem; color: var(--accent-1); }
+  .nav-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); }
+  .nav-title { font-family: 'Instrument Serif', serif; font-size: 1.4rem; }
+
+  @media print { .slide { page-break-after: always; } .theme-toggle, .logo-fixed { display: none; } html { scroll-snap-type: none; } }
+</style>
+</head>
+<body>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed" style="text-decoration:none;"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+<!-- SLIDE 1: COVER -->
+<section class="slide slide-cover">
+  <div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;top:-200px;right:-100px;"></div><div class="bg-glow" style="width:500px;height:500px;background:#6366f1;bottom:-200px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="cover-brand">T-Systems &middot; Universidad de Granada &middot; 2026</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">Deploy CampusEats en K8s</span></h1>
+    <p class="cover-subtitle">Bootcamp DevOps 2026 &mdash; Dia 3 &mdash; Bloque 2</p>
+    <div class="cover-line"></div>
+    <div class="cover-meta"><span>65 min en parejas + 15 min showcase</span><span>&middot;</span><span>En parejas</span></div>
+  </div>
+  <div class="slide-num">01 / 20</div>
+</section>
+
+<!-- SLIDE 2: ESTRUCTURA -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Estructura</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Partes del laboratorio</span></h2>
+    <table class="slide-table">
+      <thead><tr><th>Parte</th><th>Que hareis</th><th>Tiempo</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>MongoDB en K8s</td><td>15 min</td></tr>
+        <tr><td>2</td><td>Backend en K8s</td><td>15 min</td></tr>
+        <tr><td>3</td><td>Frontend en K8s</td><td>10 min</td></tr>
+        <tr><td>4</td><td>ConfigMap</td><td>10 min</td></tr>
+        <tr><td>5</td><td>Rolling update y rollback</td><td>15 min</td></tr>
+        <tr><td>6</td><td>Showcase</td><td>15 min</td></tr>
+      </tbody>
+    </table>
+    <p class="body-text">Uno escribe, el otro revisa. Alternad roles en cada parte.</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">02 / 20</div>
+</section>
+
+<!-- SLIDE 3: ANTES DE EMPEZAR -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Preparacion</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Antes de empezar</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text">Comprobad que teneis todo listo:</p>
+
+      <p class="body-text"><span class="step-num">1</span> <strong>Cluster de kind corriendo:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl get nodes
+# Debeis ver un nodo con STATUS: Ready</pre></div>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Repositorio CampusEats disponible:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">cd campuseats
+ls
+# Debeis ver las carpetas backend/ y frontend/</pre></div>
+
+      <p class="body-text"><span class="step-num">3</span> <strong>Imagenes Docker construidas:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker images | grep campuseats
+# Si no las teneis, construidlas:
+docker build -t campuseats-backend:v1 ./backend
+docker build -t campuseats-frontend:v1 ./frontend</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">03 / 20</div>
+</section>
+
+<!-- SLIDE 4: PARTE 1 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;top:-150px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 1 &middot; 15 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">MongoDB en K8s</span></h2>
+    <p class="cover-subtitle">Persistencia, Deployment y Service para la base de datos</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">04 / 20</div>
+</section>
+
+<!-- SLIDE 5: PARTE 1 - PVC -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 1</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Crear carpeta y PVC</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">1</span> <strong>Crear la carpeta de manifiestos:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">mkdir -p k8s
+cd campuseats</pre></div>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Crear <code>k8s/mongo-pvc.yaml</code>:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi</pre></div>
+
+      <div class="alert">
+        <div class="alert-title">Que es un PVC</div>
+        <p class="body-text">Un PersistentVolumeClaim pide almacenamiento al cluster. Los datos de MongoDB sobreviviran si el pod se reinicia.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">05 / 20</div>
+</section>
+
+<!-- SLIDE 6: PARTE 1 - Deployment y Service -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 1</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Deployment y Service de MongoDB</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">3</span> <strong>Crear <code>k8s/mongo-deployment.yaml</code>:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:7
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: mongo-storage
+              mountPath: /data/db
+      volumes:
+        - name: mongo-storage
+          persistentVolumeClaim:
+            claimName: mongo-pvc</pre></div>
+
+      <p class="body-text"><span class="step-num">4</span> <strong>Crear <code>k8s/mongo-service.yaml</code>:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-svc
+spec:
+  selector:
+    app: mongo
+  ports:
+    - port: 27017
+      targetPort: 27017</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">06 / 20</div>
+</section>
+
+<!-- SLIDE 7: PARTE 1 - Apply y verificar -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 1</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Aplicar y verificar MongoDB</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">5</span> <strong>Aplicar los manifiestos:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl apply -f k8s/mongo-pvc.yaml
+kubectl apply -f k8s/mongo-deployment.yaml
+kubectl apply -f k8s/mongo-service.yaml</pre></div>
+
+      <p class="body-text"><span class="step-num">6</span> <strong>Verificar que todo esta corriendo:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl get pvc
+# STATUS: Bound
+
+kubectl get pods
+# mongo-xxxx  STATUS: Running
+
+kubectl get svc
+# mongo-svc  ClusterIP  27017/TCP</pre></div>
+
+      <div class="troubleshoot">
+        <div class="troubleshoot-title">Si algo falla</div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">PVC en Pending</div><div class="troubleshoot-solution">kind incluye un StorageClass por defecto. Esperad 30s</div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Pod en CrashLoopBackOff</div><div class="troubleshoot-solution">Comprobad logs: <code>kubectl logs mongo-xxxx</code></div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Error en YAML</div><div class="troubleshoot-solution">Revisad la indentacion. YAML usa espacios, no tabuladores</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">07 / 20</div>
+</section>
+
+<!-- SLIDE 8: PARTE 2 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#6366f1;bottom:-150px;right:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 2 &middot; 15 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Backend en K8s</span></h2>
+    <p class="cover-subtitle">Cargar imagen local, Deployment y Service para la API</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">08 / 20</div>
+</section>
+
+<!-- SLIDE 9: PARTE 2 - Load image y Deployment -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 2</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Cargar imagen y crear Deployment</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">1</span> <strong>Cargar la imagen en el cluster de kind:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kind load docker-image campuseats-backend:v1 --name bootcamp</pre></div>
+
+      <div class="alert">
+        <div class="alert-title">Por que kind load</div>
+        <p class="body-text">kind ejecuta K8s dentro de Docker. Las imagenes locales no son visibles dentro del cluster. <code>kind load</code> las copia al nodo.</p>
+      </div>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Crear <code>k8s/backend-deployment.yaml</code>:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: campuseats-backend:v1
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DATABASE_URI
+              value: "mongodb://mongo-svc:27017/campuseats"</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">09 / 20</div>
+</section>
+
+<!-- SLIDE 10: PARTE 2 - Service y verificar -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 2</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Service y verificar backend</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">3</span> <strong>Crear <code>k8s/backend-service.yaml</code>:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">apiVersion: v1
+kind: Service
+metadata:
+  name: backend-svc
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 3000
+      targetPort: 3000</pre></div>
+
+      <p class="body-text"><span class="step-num">4</span> <strong>Aplicar y verificar:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl apply -f k8s/backend-deployment.yaml
+kubectl apply -f k8s/backend-service.yaml
+kubectl get pods
+# backend-xxxx  STATUS: Running</pre></div>
+
+      <p class="body-text"><span class="step-num">5</span> <strong>Probar con port-forward:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl port-forward svc/backend-svc 3000:3000
+# En otra terminal:
+curl http://localhost:3000/api/health
+# Parad con Ctrl+C</pre></div>
+
+      <div class="troubleshoot">
+        <div class="troubleshoot-title">Si algo falla</div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">ErrImageNeverPull</div><div class="troubleshoot-solution">No hicisteis <code>kind load</code>. Ejecutadlo y borrad el pod: <code>kubectl delete pod backend-xxxx</code></div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">CrashLoopBackOff</div><div class="troubleshoot-solution">Comprobad logs: <code>kubectl logs backend-xxxx</code>. Puede que MongoDB no este listo</div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Connection refused en curl</div><div class="troubleshoot-solution">Esperad a que el pod este Running. Comprobad <code>kubectl get pods</code></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">10 / 20</div>
+</section>
+
+<!-- SLIDE 11: PARTE 3 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;top:-150px;right:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 3 &middot; 10 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Frontend en K8s</span></h2>
+    <p class="cover-subtitle">La interfaz web conectada al backend</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">11 / 20</div>
+</section>
+
+<!-- SLIDE 12: PARTE 3 - Frontend deployment y service -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 3</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Desplegar el frontend</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">1</span> <strong>Cargar la imagen:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kind load docker-image campuseats-frontend:v1 --name bootcamp</pre></div>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Crear <code>k8s/frontend-deployment.yaml</code>:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: campuseats-frontend:v1
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 80</pre></div>
+
+      <p class="body-text"><span class="step-num">3</span> <strong>Crear <code>k8s/frontend-service.yaml</code>:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-svc
+spec:
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 80</pre></div>
+
+      <p class="body-text"><span class="step-num">4</span> <strong>Aplicar y probar:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl apply -f k8s/frontend-deployment.yaml
+kubectl apply -f k8s/frontend-service.yaml
+kubectl get pods
+# frontend-xxxx  STATUS: Running
+
+kubectl port-forward svc/frontend-svc 8080:80
+# Abrid http://localhost:8080</pre></div>
+
+      <div class="troubleshoot">
+        <div class="troubleshoot-title">Si algo falla</div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Pagina en blanco</div><div class="troubleshoot-solution">Comprobad <code>kubectl logs frontend-xxxx</code>. La imagen puede necesitar rebuild</div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Puerto 8080 en uso</div><div class="troubleshoot-solution">Usad otro: <code>kubectl port-forward svc/frontend-svc 9090:80</code></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">12 / 20</div>
+</section>
+
+<!-- SLIDE 13: PARTE 4 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#6366f1;bottom:-150px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 4 &middot; 10 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">ConfigMap</span></h2>
+    <p class="cover-subtitle">Separar la configuracion de la imagen</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">13 / 20</div>
+</section>
+
+<!-- SLIDE 14: PARTE 4 - ConfigMap -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 4</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Crear y usar ConfigMap</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">1</span> <strong>Crear <code>k8s/configmap.yaml</code>:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: campuseats-config
+data:
+  DATABASE_URI: "mongodb://mongo-svc:27017/campuseats"
+  NODE_ENV: "production"
+  PORT: "3000"</pre></div>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Actualizar <code>k8s/backend-deployment.yaml</code></strong> — reemplazad la seccion <code>env</code> por <code>envFrom</code>:</p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">      containers:
+        - name: backend
+          image: campuseats-backend:v1
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: campuseats-config</pre></div>
+
+      <p class="body-text"><span class="step-num">3</span> <strong>Aplicar todo de golpe:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl apply -f k8s/</pre></div>
+
+      <p class="body-text"><span class="step-num">4</span> <strong>Verificar que las variables estan inyectadas:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl exec deploy/backend -- env | grep DATABASE
+# Debeis ver: DATABASE_URI=mongodb://mongo-svc:27017/campuseats</pre></div>
+
+      <div class="alert">
+        <div class="alert-title">Ventaja</div>
+        <p class="body-text">Ahora podeis cambiar la configuracion sin reconstruir la imagen Docker. Solo editais el ConfigMap y reiniciais el pod.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">14 / 20</div>
+</section>
+
+<!-- SLIDE 15: PARTE 5 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;top:-150px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 5 &middot; 15 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Rolling update y rollback</span></h2>
+    <p class="cover-subtitle">Desplegar una nueva version sin downtime</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">15 / 20</div>
+</section>
+
+<!-- SLIDE 16: PARTE 5 - Build v2 -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 5</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Construir v2 y desplegar</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">1</span> <strong>Haced un cambio visible en el codigo del backend</strong> (por ejemplo, cambiad el mensaje de health check o anadid un endpoint).</p>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Construir la imagen v2:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker build -t campuseats-backend:v2 ./backend</pre></div>
+
+      <p class="body-text"><span class="step-num">3</span> <strong>Cargar en kind:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kind load docker-image campuseats-backend:v2 --name bootcamp</pre></div>
+
+      <p class="body-text"><span class="step-num">4</span> <strong>Actualizar el deployment:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl set image deployment/backend backend=campuseats-backend:v2</pre></div>
+
+      <p class="body-text"><span class="step-num">5</span> <strong>Observar el rolling update en directo:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body"># En una terminal:
+kubectl get pods -w
+
+# En otra terminal:
+kubectl rollout status deployment/backend
+# Debeis ver: deployment "backend" successfully rolled out</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">16 / 20</div>
+</section>
+
+<!-- SLIDE 17: PARTE 5 - Verificar y rollback -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 5</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Verificar y hacer rollback</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">6</span> <strong>Verificar la nueva version:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl port-forward svc/backend-svc 3000:3000
+# Comprobad que el cambio esta visible
+# Parad con Ctrl+C</pre></div>
+
+      <p class="body-text"><span class="step-num">7</span> <strong>Hacer rollback a v1:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl rollout undo deployment/backend</pre></div>
+
+      <p class="body-text"><span class="step-num">8</span> <strong>Verificar que volvemos a v1:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl rollout status deployment/backend
+kubectl port-forward svc/backend-svc 3000:3000
+# Comprobad que el cambio ha desaparecido — estamos en v1</pre></div>
+
+      <div class="alert">
+        <div class="alert-title">Clave</div>
+        <p class="body-text">Kubernetes mantiene un historial de versiones. Con <code>rollout undo</code> podeis volver a la version anterior en segundos, sin reconstruir nada.</p>
+      </div>
+
+      <div class="troubleshoot">
+        <div class="troubleshoot-title">Si algo falla</div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">El pod nuevo no arranca</div><div class="troubleshoot-solution">Comprobad <code>kubectl describe pod backend-xxxx</code> y <code>kubectl logs backend-xxxx</code></div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">No se ve el cambio</div><div class="troubleshoot-solution">Verificad la imagen: <code>kubectl describe deploy backend | grep Image</code></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">17 / 20</div>
+</section>
+
+<!-- SLIDE 18: SHOWCASE -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#6366f1;bottom:-150px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Showcase &middot; 15 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Showcase</span></h2>
+    <p class="cover-subtitle">Demostrad vuestro trabajo al resto de la clase</p>
+    <div style="margin-top:3rem; text-align:left; max-width:700px; margin-left:auto; margin-right:auto;">
+      <p class="body-text">Cada pareja elige <strong>una de estas demos</strong> (3-4 min):</p>
+      <ul class="slide-list">
+        <li><strong>Opcion A:</strong> Enseniad <code>kubectl get all</code> y explicad cada recurso (pod, svc, deploy)</li>
+        <li><strong>Opcion B:</strong> Haced un rolling update en directo con <code>kubectl get pods -w</code></li>
+        <li><strong>Opcion C:</strong> Haced un rollback en directo y explicad por que es util</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">18 / 20</div>
+</section>
+
+<!-- SLIDE 19: RESUMEN -->
+<section class="slide">
+  <div class="bg-glow" style="width:700px;height:700px;background:#00a3e0;top:50%;left:50%;transform:translate(-50%,-50%);"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Resumen</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Lo que habeis conseguido</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <div class="alert">
+        <div class="alert-title">Resumen</div>
+        <p class="body-text">1. MongoDB con almacenamiento persistente (PVC + Deployment + Service)</p>
+        <p class="body-text">2. Backend conectado a MongoDB via DNS interno de K8s</p>
+        <p class="body-text">3. Frontend servido desde un pod independiente</p>
+        <p class="body-text">4. ConfigMap para externalizar la configuracion</p>
+        <p class="body-text">5. Rolling update y rollback sin downtime</p>
+      </div>
+
+      <p class="body-text" style="margin-top:1.5rem;">Teneis una aplicacion completa corriendo en Kubernetes. En el siguiente bloque usareis <strong>Helm</strong> para simplificar estos despliegues.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">19 / 20</div>
+</section>
+
+<!-- SLIDE 20: NAVEGACION -->
+<section class="slide">
+  <div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;bottom:-200px;left:-100px;"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Navegacion</div>
+    <h2 class="headline headline-lg">Volver a las <span class="gradient-text">slides</span></h2>
+    <div class="nav-links">
+      <a href="dia3-bloque1-kubernetes-intro.html" class="nav-link nav-prev"><span class="nav-arrow">&larr;</span><span class="nav-label">Anterior</span><span class="nav-title">Kubernetes Intro</span></a>
+      <a href="dia3-bloque3-helm.html" class="nav-link nav-next"><span class="nav-label">Siguiente</span><span class="nav-title">Helm</span><span class="nav-arrow">&rarr;</span></a>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+</section>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+document.addEventListener('keydown',e=>{const sl=document.querySelectorAll('.slide');const c=Math.round(window.scrollY/window.innerHeight);if(['ArrowDown',' ','ArrowRight'].includes(e.key)){e.preventDefault();sl[Math.min(c+1,sl.length-1)].scrollIntoView({behavior:'smooth'});}if(['ArrowUp','ArrowLeft'].includes(e.key)){e.preventDefault();sl[Math.max(c-1,0)].scrollIntoView({behavior:'smooth'});}});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kubectl Cheat Sheet — Bootcamp DevOps 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00a3e0; --accent-2: #6366f1;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00a3e0; --accent-2: #6366f1;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); min-height: 100vh; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(2.5rem, 6vw, 5rem); }
+  .headline-lg { font-size: clamp(1.8rem, 4vw, 3rem); }
+  .headline-md { font-size: clamp(1.4rem, 3vw, 2rem); }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .body-text { font-size: 1.1rem; line-height: 1.8; color: var(--text-muted); margin-bottom: 1rem; }
+
+  .bg-glow { position: fixed; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: fixed; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  strong { color: var(--text-primary); }
+
+  .container { max-width: 860px; margin: 0 auto; padding: 6rem 2rem 4rem; position: relative; z-index: 2; }
+
+  .cover { text-align: center; margin-bottom: 4rem; padding-bottom: 3rem; border-bottom: 1px solid var(--border); }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 2rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.4rem; font-style: italic; color: var(--text-muted); margin-top: 0.5rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 1.5rem auto; }
+
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1rem; }
+
+  section { margin-bottom: 3rem; }
+  section h2 { margin-bottom: 1.5rem; }
+  section h3 { font-family: 'Instrument Serif', serif; font-size: 1.3rem; font-weight: 400; color: var(--text-primary); margin: 1.5rem 0 0.75rem; }
+
+  .slide-list { list-style: none; padding: 0; margin: 1rem 0 1.5rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.05rem; position: relative; border-bottom: 1px solid var(--border); line-height: 1.6; }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; align-items: center; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-left: auto; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; overflow-x: auto; }
+
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: white; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 600; margin-right: 0.75rem; flex-shrink: 0; }
+
+  .footer-nav { text-align: center; padding-top: 2rem; border-top: 1px solid var(--border); }
+  .back-link { display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--accent-1); text-decoration: none; padding: 0.8rem 1.8rem; border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); border-radius: 100px; transition: all 0.2s; margin-top: 2rem; }
+  .back-link:hover { background: var(--accent-1); color: white; }
+
+  .footer { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; }
+</style>
+</head>
+<body>
+
+<div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;top:-200px;right:-100px;"></div>
+<div class="bg-glow" style="width:500px;height:500px;background:#6366f1;bottom:-200px;left:-100px;"></div>
+<div class="bg-noise"></div>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed" style="text-decoration:none;"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+<div class="container">
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="cover-brand">CHEAT SHEET</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">kubectl</span></h1>
+    <p class="cover-subtitle">Referencia rapida</p>
+    <div class="cover-line"></div>
+  </div>
+
+  <!-- 1. Informacion del cluster -->
+  <section>
+    <span class="tag">Cluster</span>
+    <h2 class="headline headline-lg"><span class="gradient-text">Informacion del cluster</span></h2>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl cluster-info    <span style="color:var(--text-dim);"># URL del control plane y servicios</span>
+
+kubectl get nodes      <span style="color:var(--text-dim);"># Lista de nodos del cluster</span>
+
+kubectl version        <span style="color:var(--text-dim);"># Version del cliente y del servidor</span></div>
+    </div>
+  </section>
+
+  <!-- 2. Pods -->
+  <section>
+    <span class="tag">Pods</span>
+    <h2 class="headline headline-lg"><span class="gradient-text">Pods</span></h2>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl get pods                   <span style="color:var(--text-dim);"># Listar pods del namespace actual</span>
+kubectl get pods -o wide           <span style="color:var(--text-dim);"># Mas detalle: IP, nodo, etc.</span>
+kubectl get pods -A                <span style="color:var(--text-dim);"># Todos los namespaces</span></div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl describe pod &lt;nombre&gt;       <span style="color:var(--text-dim);"># Detalle completo: eventos, estado, IP</span></div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl logs &lt;nombre&gt;               <span style="color:var(--text-dim);"># Ver logs del contenedor</span>
+kubectl logs &lt;nombre&gt; -f            <span style="color:var(--text-dim);"># Seguir logs en tiempo real</span>
+kubectl logs &lt;nombre&gt; --previous    <span style="color:var(--text-dim);"># Logs del contenedor anterior (crash)</span></div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl exec -it &lt;nombre&gt; -- bash   <span style="color:var(--text-dim);"># Shell interactivo dentro del pod</span></div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl port-forward pod/&lt;nombre&gt; 8080:80   <span style="color:var(--text-dim);"># Acceder al pod en localhost:8080</span></div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl delete pod &lt;nombre&gt;         <span style="color:var(--text-dim);"># Eliminar un pod</span></div>
+    </div>
+  </section>
+
+  <!-- 3. Deployments -->
+  <section>
+    <span class="tag">Deployments</span>
+    <h2 class="headline headline-lg"><span class="gradient-text">Deployments</span></h2>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl get deploy                 <span style="color:var(--text-dim);"># Listar deployments</span>
+kubectl describe deploy &lt;nombre&gt;   <span style="color:var(--text-dim);"># Detalle del deployment</span></div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl scale deploy &lt;nombre&gt; --replicas=3   <span style="color:var(--text-dim);"># Escalar a 3 replicas</span></div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl rollout status deploy/&lt;nombre&gt;   <span style="color:var(--text-dim);"># Ver estado del rollout</span>
+kubectl rollout undo deploy/&lt;nombre&gt;     <span style="color:var(--text-dim);"># Rollback a la version anterior</span></div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl set image deploy/&lt;nombre&gt; &lt;container&gt;=&lt;imagen:tag&gt;   <span style="color:var(--text-dim);"># Actualizar imagen</span></div>
+    </div>
+  </section>
+
+  <!-- 4. Services -->
+  <section>
+    <span class="tag">Services</span>
+    <h2 class="headline headline-lg"><span class="gradient-text">Services</span></h2>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl get svc                    <span style="color:var(--text-dim);"># Listar servicios</span>
+kubectl describe svc &lt;nombre&gt;      <span style="color:var(--text-dim);"># Detalle: endpoints, puertos, tipo</span></div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl port-forward svc/&lt;nombre&gt; 8080:80   <span style="color:var(--text-dim);"># Acceder al servicio en localhost</span></div>
+    </div>
+  </section>
+
+  <!-- 5. ConfigMaps y Secrets -->
+  <section>
+    <span class="tag">Configuracion</span>
+    <h2 class="headline headline-lg"><span class="gradient-text">ConfigMaps y Secrets</span></h2>
+    <h3>ConfigMaps</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl create configmap &lt;nombre&gt; --from-literal=KEY=value   <span style="color:var(--text-dim);"># Crear desde literal</span>
+kubectl create configmap &lt;nombre&gt; --from-file=config.yaml    <span style="color:var(--text-dim);"># Crear desde archivo</span>
+kubectl get cm                     <span style="color:var(--text-dim);"># Listar ConfigMaps</span>
+kubectl describe cm &lt;nombre&gt;       <span style="color:var(--text-dim);"># Ver contenido</span></div>
+    </div>
+    <h3>Secrets</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl create secret generic &lt;nombre&gt; --from-literal=PASS=s3cr3t   <span style="color:var(--text-dim);"># Crear secret</span>
+kubectl get secrets                <span style="color:var(--text-dim);"># Listar secrets</span>
+kubectl describe secret &lt;nombre&gt;   <span style="color:var(--text-dim);"># Ver metadatos (valores ocultos)</span></div>
+    </div>
+  </section>
+
+  <!-- 6. Namespaces -->
+  <section>
+    <span class="tag">Namespaces</span>
+    <h2 class="headline headline-lg"><span class="gradient-text">Namespaces</span></h2>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl get ns                     <span style="color:var(--text-dim);"># Listar namespaces</span>
+kubectl create ns &lt;nombre&gt;         <span style="color:var(--text-dim);"># Crear un namespace</span></div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl get pods -n &lt;namespace&gt;    <span style="color:var(--text-dim);"># Pods de un namespace especifico</span></div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl config set-context --current --namespace=&lt;ns&gt;   <span style="color:var(--text-dim);"># Cambiar namespace por defecto</span></div>
+    </div>
+  </section>
+
+  <!-- 7. Apply y Delete -->
+  <section>
+    <span class="tag">Manifiestos</span>
+    <h2 class="headline headline-lg"><span class="gradient-text">Apply y Delete</span></h2>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl apply -f archivo.yaml      <span style="color:var(--text-dim);"># Crear o actualizar recursos desde YAML</span>
+kubectl apply -f ./directorio/     <span style="color:var(--text-dim);"># Aplicar todos los YAML de un directorio</span></div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl delete -f archivo.yaml     <span style="color:var(--text-dim);"># Eliminar los recursos definidos en el YAML</span>
+kubectl delete -f ./directorio/    <span style="color:var(--text-dim);"># Eliminar todos los recursos del directorio</span></div>
+    </div>
+  </section>
+
+  <!-- 8. Debug rapido -->
+  <section>
+    <span class="tag">Debug</span>
+    <h2 class="headline headline-lg"><span class="gradient-text">Debug rapido</span></h2>
+    <p class="body-text" style="margin-top:0.5rem;">Cuando algo no funciona, estos comandos son tu mejor aliado:</p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl get events --sort-by='.lastTimestamp'   <span style="color:var(--text-dim);"># Ver eventos recientes del cluster</span></div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl describe pod &lt;nombre&gt;       <span style="color:var(--text-dim);"># Revisar Events al final del output</span></div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl logs &lt;nombre&gt; --previous    <span style="color:var(--text-dim);"># Logs del contenedor que crasheo</span></div>
+    </div>
+    <p class="body-text"><strong>Consejo:</strong> Si un pod esta en <code style="font-family:'JetBrains Mono',monospace;font-size:0.9em;background:var(--bg-card);padding:0.15rem 0.5rem;border-radius:6px;border:1px solid var(--border);">CrashLoopBackOff</code>, revisa primero los logs y luego el describe.</p>
+  </section>
+
+  <!-- 9. Flujo tipico -->
+  <section>
+    <span class="tag">Workflow</span>
+    <h2 class="headline headline-lg"><span class="gradient-text">Flujo tipico</span></h2>
+    <p class="body-text" style="margin-top:0.5rem;">Flujo habitual de trabajo con kubectl:</p>
+
+    <p class="body-text"><span class="step-num">1</span> <strong>Escribir el manifiesto YAML</strong> con los recursos necesarios (Deployment, Service, etc.)</p>
+
+    <p class="body-text"><span class="step-num">2</span> <strong>Aplicar el manifiesto</strong></p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl apply -f mi-app.yaml</div>
+    </div>
+
+    <p class="body-text"><span class="step-num">3</span> <strong>Verificar que los pods estan corriendo</strong></p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl get pods -w    <span style="color:var(--text-dim);"># -w para watch en tiempo real</span></div>
+    </div>
+
+    <p class="body-text"><span class="step-num">4</span> <strong>Comprobar los logs</strong></p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl logs deploy/mi-app</div>
+    </div>
+
+    <p class="body-text"><span class="step-num">5</span> <strong>Acceder al servicio</strong></p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl port-forward svc/mi-app 8080:80</div>
+    </div>
+
+    <p class="body-text"><span class="step-num">6</span> <strong>Si algo falla, debug</strong></p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">kubectl describe pod &lt;nombre&gt;
+kubectl logs &lt;nombre&gt; --previous
+kubectl get events</div>
+    </div>
+  </section>
+
+  <!-- Footer nav -->
+  <div class="footer-nav">
+    <a href="index.html" class="back-link">&larr; Volver al indice</a>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span class="logo">carlos<strong>palanca</strong>.es</span> &middot; Bootcamp DevOps 2026
+</div>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teoria: Helm — Bootcamp DevOps 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00a3e0; --accent-2: #6366f1;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00a3e0; --accent-2: #6366f1;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); min-height: 100vh; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(2.5rem, 6vw, 5rem); }
+  .headline-lg { font-size: clamp(1.8rem, 4vw, 3rem); }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .body-text { font-size: 1.1rem; line-height: 1.8; color: var(--text-muted); margin-bottom: 1rem; }
+
+  .bg-glow { position: fixed; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: fixed; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  strong { color: var(--text-primary); }
+
+  .container { max-width: 860px; margin: 0 auto; padding: 6rem 2rem 4rem; position: relative; z-index: 2; }
+
+  .cover { text-align: center; margin-bottom: 4rem; padding-bottom: 3rem; border-bottom: 1px solid var(--border); }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 2rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.4rem; font-style: italic; color: var(--text-muted); margin-top: 0.5rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 1.5rem auto; }
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1rem; }
+
+  .section { margin-bottom: 3rem; }
+
+  .slide-list { list-style: none; padding: 0; margin: 1rem 0 1.5rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.05rem; position: relative; border-bottom: 1px solid var(--border); line-height: 1.6; }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; overflow-x: auto; }
+
+  .slide-table { width: 100%; margin: 1.5rem 0; border-collapse: separate; border-spacing: 0 0.4rem; }
+  .slide-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 0.6rem 1.2rem; text-align: left; }
+  .slide-table td { padding: 1rem 1.2rem; background: var(--bg-card); font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; }
+  .slide-table tr td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; color: var(--text-primary); }
+  .slide-table tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  .back-link { display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--accent-1); text-decoration: none; padding: 0.8rem 1.8rem; border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); border-radius: 100px; transition: all 0.2s; margin-top: 2rem; }
+  .back-link:hover { background: var(--accent-1); color: white; }
+
+  .footer { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; }
+</style>
+</head>
+<body>
+
+<div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;top:-200px;right:-100px;"></div>
+<div class="bg-glow" style="width:500px;height:500px;background:#6366f1;bottom:-200px;left:-100px;"></div>
+<div class="bg-noise"></div>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed" style="text-decoration:none;"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+<div class="container">
+
+  <div class="cover">
+    <div class="cover-brand">T-Systems &middot; Universidad de Granada &middot; 2026</div>
+    <span class="tag">Teoria &middot; Dia 3 &mdash; Bloque 3</span>
+    <h1 class="headline headline-xl"><span class="gradient-text">Helm</span></h1>
+    <p class="cover-subtitle">El gestor de paquetes de Kubernetes</p>
+    <div class="cover-line"></div>
+  </div>
+
+  <!-- Que es Helm -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">Que es Helm</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Imagina que quieres instalar un programa en tu ordenador. En Ubuntu usas <code style="font-family:'JetBrains Mono',monospace;font-size:0.9em;background:var(--bg-card);padding:0.15rem 0.5rem;border-radius:6px;border:1px solid var(--border);">apt install</code>, en Mac usas <code style="font-family:'JetBrains Mono',monospace;font-size:0.9em;background:var(--bg-card);padding:0.15rem 0.5rem;border-radius:6px;border:1px solid var(--border);">brew install</code>. No te preocupas de donde van los ficheros, las dependencias ni la configuracion inicial: el gestor de paquetes se encarga de todo.</p>
+    <p class="body-text"><strong>Helm es exactamente eso, pero para Kubernetes.</strong> En lugar de instalar programas en un ordenador, instalas aplicaciones en un cluster de Kubernetes con un solo comando.</p>
+    <p class="body-text">Sin Helm, desplegar una aplicacion en Kubernetes requiere crear y mantener multiples ficheros YAML: el Deployment, el Service, el ConfigMap, el Ingress... Para una aplicacion sencilla pueden ser 5-10 ficheros. Para una aplicacion compleja, facilmente 20 o mas. Modificar un valor (por ejemplo, el numero de replicas) implica buscar y editar el fichero correcto a mano.</p>
+    <p class="body-text">Con Helm, toda esa complejidad se empaqueta en un unico "paquete" que se instala, actualiza y desinstala con un solo comando.</p>
+  </div>
+
+  <!-- Conceptos clave -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">Conceptos clave</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Helm maneja cuatro conceptos fundamentales:</p>
+    <table class="slide-table">
+      <thead><tr><th>Concepto</th><th>Que es</th><th>Analogia</th></tr></thead>
+      <tbody>
+        <tr><td>Chart</td><td>Un paquete que contiene todos los YAML de una aplicacion</td><td>Como un .deb o un .pkg</td></tr>
+        <tr><td>Release</td><td>Una instancia instalada de un Chart en tu cluster</td><td>Como un programa ya instalado</td></tr>
+        <tr><td>Repository</td><td>Un almacen donde se publican Charts</td><td>Como un repositorio de apt o brew</td></tr>
+        <tr><td>Values</td><td>Los parametros de configuracion de un Chart</td><td>Como las opciones de instalacion</td></tr>
+      </tbody>
+    </table>
+    <p class="body-text">Un mismo Chart (por ejemplo, <code style="font-family:'JetBrains Mono',monospace;font-size:0.9em;background:var(--bg-card);padding:0.15rem 0.5rem;border-radius:6px;border:1px solid var(--border);">bitnami/nginx</code>) se puede instalar varias veces con distintos nombres y configuraciones. Cada instalacion es un Release diferente.</p>
+  </div>
+
+  <!-- Comandos basicos -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">Comandos basicos</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Estos son los comandos que usaras en el laboratorio:</p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div>
+      <pre class="terminal-body"># Anadir un repositorio de Charts
+helm repo add bitnami https://charts.bitnami.com/bitnami
+
+# Buscar Charts disponibles
+helm search repo bitnami/nginx
+
+# Instalar un Chart (crear un Release)
+helm install mi-nginx bitnami/nginx
+
+# Ver los Releases instalados
+helm list
+
+# Actualizar un Release con nuevos valores
+helm upgrade mi-nginx bitnami/nginx -f values-custom.yaml
+
+# Ver el historial de versiones de un Release
+helm history mi-nginx
+
+# Volver a una version anterior
+helm rollback mi-nginx 1
+
+# Desinstalar un Release
+helm uninstall mi-nginx</pre>
+    </div>
+  </div>
+
+  <!-- Donde encontrar Charts -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">Donde encontrar Charts</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;"><strong>ArtifactHub</strong> (<a href="https://artifacthub.io" style="color:var(--accent-1);">https://artifacthub.io</a>) es el buscador publico de Charts de Helm. Ahi puedes encontrar Charts para casi cualquier aplicacion: nginx, PostgreSQL, Redis, Grafana, ArgoCD y miles mas. Cada Chart incluye documentacion sobre los valores que puedes configurar.</p>
+  </div>
+
+  <!-- Resumen -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">Resumen</span></h2>
+    <ul class="slide-list" style="margin-top:1.5rem;">
+      <li>Helm empaqueta aplicaciones de Kubernetes en <strong>Charts reutilizables</strong>.</li>
+      <li>Instalas, actualizas y desinstalas aplicaciones con <strong>un solo comando</strong>.</li>
+      <li>Personalizas la configuracion mediante ficheros de <strong>Values</strong> sin tocar los YAML originales.</li>
+      <li>No necesitas crear Charts desde cero: la comunidad ya tiene Charts para <strong>casi todo</strong>.</li>
+    </ul>
+  </div>
+
+  <div style="text-align:center;padding-top:2rem;border-top:1px solid var(--border);">
+    <a href="index.html" class="back-link">&larr; Volver al indice</a>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span class="logo">carlos<strong>palanca</strong>.es</span> &middot; Bootcamp DevOps 2026
+</div>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+</script>
+
+</body>
+</html>

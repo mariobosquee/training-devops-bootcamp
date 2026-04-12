@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sobre Mi — Carlos Palanca</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  /* ====== THEME SYSTEM ====== */
+  :root {
+    --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f;
+    --bg-card: #12121a;
+    --bg-surface: #1a1a26;
+    --accent-magenta: #e4007c;
+    --accent-blue: #00a3e0;
+    --accent-cyan: #00d4aa;
+    --accent-orange: #ff6b35;
+    --text-primary: #f0eff4;
+    --text-muted: #8a8a9a;
+    --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06);
+    --card-hover: rgba(255,255,255,0.12);
+    --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9;
+    --bg-card: #ffffff;
+    --bg-surface: #f0efeb;
+    --accent-magenta: #c8006a;
+    --accent-blue: #0080b8;
+    --accent-cyan: #00a888;
+    --accent-orange: #e05a2b;
+    --text-primary: #1a1a1a;
+    --text-muted: #5a5a6a;
+    --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08);
+    --card-hover: rgba(0,0,0,0.06);
+    --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  .slide {
+    min-height: 100vh;
+    scroll-snap-align: start;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .slide-inner { max-width: 1100px; width: 100%; z-index: 2; }
+
+  /* Theme toggle */
+  .theme-toggle {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 999;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 0.5rem;
+    display: flex;
+    gap: 0.25rem;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .theme-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+  }
+
+  .theme-btn.active {
+    background: var(--accent-magenta);
+    color: white;
+  }
+
+  /* Logo */
+  .logo {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
+  }
+  .logo strong {
+    font-weight: 700;
+    color: var(--accent-magenta);
+  }
+
+  .logo-fixed {
+    position: fixed;
+    top: 1.8rem;
+    left: 2rem;
+    z-index: 999;
+  }
+
+  /* Typography */
+  .headline {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+  .headline-xl { font-size: clamp(3rem, 8vw, 6.5rem); }
+  .headline-lg { font-size: clamp(2.5rem, 6vw, 5rem); }
+  .headline-md { font-size: clamp(1.8rem, 3.5vw, 3rem); }
+
+  .body-text { font-size: 1.15rem; line-height: 1.7; color: var(--text-muted); }
+
+  .gradient-text {
+    background: linear-gradient(135deg, var(--accent-magenta) 0%, var(--accent-blue) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent-magenta);
+    border: 1px solid rgba(228, 0, 124, 0.3);
+    padding: 0.35rem 0.9rem;
+    border-radius: 100px;
+    margin-bottom: 1.5rem;
+  }
+
+  .slide-num {
+    position: absolute;
+    bottom: 2rem;
+    right: 3rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+  }
+
+  .slide-footer {
+    position: absolute;
+    bottom: 2rem;
+    left: 3rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+  }
+
+  .bg-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: var(--glow-opacity);
+    pointer-events: none;
+    transition: opacity var(--transition);
+  }
+
+  .bg-noise {
+    position: absolute;
+    inset: 0;
+    opacity: 0.025;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+
+  .bg-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  /* ====== SLIDE 1: PORTADA ====== */
+  .cover-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+  }
+
+  .cover-photo {
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--bg-card);
+    box-shadow: 0 0 0 1px var(--border), 0 20px 60px rgba(0,0,0,0.3);
+    justify-self: center;
+  }
+
+  .cover-name {
+    margin-bottom: 0.5rem;
+  }
+
+  .cover-role {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.3rem;
+    color: var(--accent-magenta);
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+  }
+
+  .cover-bio {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+  }
+
+  .cover-meta {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .meta-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+  }
+
+  /* ====== SLIDE 2: EXPERIENCIA ====== */
+  .timeline {
+    margin-top: 2.5rem;
+    position: relative;
+    padding-left: 2rem;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--accent-magenta), var(--accent-blue), transparent);
+  }
+
+  .timeline-item {
+    position: relative;
+    padding-bottom: 2rem;
+    padding-left: 1.5rem;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -2rem;
+    top: 0.3rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent-magenta);
+    border: 2px solid var(--bg-deep);
+  }
+
+  .timeline-period {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent-cyan);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+
+  .timeline-role {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .timeline-company {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .timeline-desc {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ====== SLIDE 3: SKILLS ====== */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+  }
+
+  .skill-group {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.8rem;
+    transition: transform 0.2s, border-color 0.3s;
+  }
+
+  .skill-group:hover {
+    transform: translateY(-3px);
+    border-color: var(--accent-magenta);
+  }
+
+  .skill-category {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent-magenta);
+    margin-bottom: 1rem;
+  }
+
+  .skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .skill-tag {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+
+  /* ====== SLIDE 4: CERTS + TEACHING ====== */
+  .split-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin-top: 2.5rem;
+  }
+
+  .cert-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .cert-name { font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; }
+  .cert-issuer { font-size: 0.85rem; color: var(--text-muted); }
+  .cert-year { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--accent-cyan); margin-top: 0.3rem; }
+
+  .teaching-item {
+    padding: 1.2rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .teaching-item:last-child { border-bottom: none; }
+  .teaching-role { font-weight: 700; font-size: 1rem; }
+  .teaching-where { font-size: 0.9rem; color: var(--text-muted); margin-top: 0.2rem; }
+  .teaching-year { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--accent-orange); }
+
+  /* ====== SLIDE 5: BOOTCAMP INTRO ====== */
+  .bootcamp-hero { text-align: center; }
+
+  .bootcamp-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem 1rem;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2.5rem;
+    color: var(--accent-magenta);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-label {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+  }
+
+  .stat-sub {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: 0.3rem;
+  }
+
+  .bootcamp-days {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .day-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.3rem;
+    text-align: left;
+    transition: border-color 0.3s;
+  }
+
+  .day-card:hover { border-color: var(--accent-magenta); }
+
+  .day-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent-magenta);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .day-title { font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; }
+  .day-desc { font-size: 0.8rem; color: var(--text-dim); }
+
+  .nav-links { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem; }
+  .nav-link { display: flex; flex-direction: column; gap: 0.3rem; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; text-decoration: none; color: var(--text-primary); transition: border-color 0.3s, transform 0.2s; }
+  .nav-link:hover { border-color: var(--accent-magenta); transform: translateY(-3px); }
+  .nav-next { text-align: right; grid-column: 2; }
+  .nav-arrow { font-size: 1.5rem; color: var(--accent-magenta); }
+  .nav-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); }
+  .nav-title { font-family: 'Instrument Serif', serif; font-size: 1.4rem; }
+
+  @media print {
+    .slide { page-break-after: always; }
+    .theme-toggle, .logo-fixed { display: none; }
+    html { scroll-snap-type: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Theme Toggle -->
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+
+<!-- Logo -->
+<a href="index.html" class="logo-fixed" style="text-decoration:none;">
+  <span class="logo">carlos<strong>palanca</strong>.es</span>
+</div>
+
+<!-- SLIDE 1: SOBRE MI -->
+<section class="slide">
+  <div class="bg-glow" style="width:600px;height:600px;background:var(--accent-magenta);top:-150px;right:-100px;"></div>
+  <div class="bg-glow" style="width:400px;height:400px;background:var(--accent-blue);bottom:-100px;left:10%;"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="cover-layout">
+      <div>
+        <div class="tag">Instructor</div>
+        <h1 class="headline headline-xl cover-name">
+          Carlos <span class="gradient-text">Palanca</span>
+        </h1>
+        <div class="cover-role">DevOps Engineer &middot; Cloud Architect &middot; Instructor</div>
+        <p class="cover-bio">
+          Llevo mas de 10 anos trabajando en infraestructura, automatizacion y desarrollo. Hoy combino mi trabajo en DevOps y cloud con la ensenanza como instructor del Bootcamp DevOps 2026 de T-Systems Iberia junto a la Incubadora de Talento de la UGR.
+        </p>
+        <div class="cover-meta">
+          <span class="meta-chip">T-Systems Iberia</span>
+          <span class="meta-chip">AWS Certified</span>
+          <span class="meta-chip">Azure Certified</span>
+          <span class="meta-chip">10+ anos</span>
+        </div>
+      </div>
+      <div style="text-align:center;">
+        <img src="carlos.jpg" alt="Carlos Palanca" class="cover-photo">
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">01 / 05</div>
+</section>
+
+<!-- SLIDE 2: EXPERIENCIA -->
+<section class="slide">
+  <div class="bg-grid"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Trayectoria</div>
+    <h2 class="headline headline-lg">Experiencia <span class="gradient-text">profesional</span></h2>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-period">2026 – presente</div>
+        <div class="timeline-role">Ingeniero DevOps (AppOps) & AI Automatist</div>
+        <div class="timeline-company">T-Systems Iberia</div>
+        <div class="timeline-desc">Automatizacion inteligente, ecosistema MagentaCICD. GitLab, JFrog, SonarQube, GitGuardian. Plataformas T-CAAS, TARDIS, GAIA LLM.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-period">2022 – 2026</div>
+        <div class="timeline-role">Ingeniero DevOps</div>
+        <div class="timeline-company">T-Systems Iberia</div>
+        <div class="timeline-desc">Cloud, CI/CD y Kubernetes. Migraciones EKS, GitHub Actions, Helm, Traefik. Product Owner en proyecto internacional SPICS.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-period">2014 – 2021</div>
+        <div class="timeline-role">Full Stack Developer & Disenador</div>
+        <div class="timeline-company">Agencias & Startups</div>
+        <div class="timeline-desc">Laravel, Vue, React, Node.js. Proyectos en automocion, educacion y e-commerce.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">02 / 05</div>
+</section>
+
+<!-- SLIDE 3: TECNOLOGIAS -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Stack</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Tecnologias</span></h2>
+    <div class="skills-grid">
+      <div class="skill-group">
+        <div class="skill-category">DevOps & CI/CD</div>
+        <div class="skill-tags">
+          <span class="skill-tag">Docker</span>
+          <span class="skill-tag">Kubernetes</span>
+          <span class="skill-tag">GitHub Actions</span>
+          <span class="skill-tag">ArgoCD</span>
+          <span class="skill-tag">Jenkins</span>
+          <span class="skill-tag">Helm</span>
+          <span class="skill-tag">GitLab</span>
+          <span class="skill-tag">Traefik</span>
+        </div>
+      </div>
+      <div class="skill-group">
+        <div class="skill-category">Cloud & IaC</div>
+        <div class="skill-tags">
+          <span class="skill-tag">AWS</span>
+          <span class="skill-tag">GCP</span>
+          <span class="skill-tag">Azure</span>
+          <span class="skill-tag">Terraform</span>
+          <span class="skill-tag">MinIO</span>
+          <span class="skill-tag">Restic</span>
+        </div>
+      </div>
+      <div class="skill-group">
+        <div class="skill-category">IA Aplicada</div>
+        <div class="skill-tags">
+          <span class="skill-tag">Claude API</span>
+          <span class="skill-tag">OpenAI</span>
+          <span class="skill-tag">Ollama</span>
+          <span class="skill-tag">Python</span>
+          <span class="skill-tag">LangChain</span>
+          <span class="skill-tag">RAG</span>
+        </div>
+      </div>
+      <div class="skill-group">
+        <div class="skill-category">Observabilidad</div>
+        <div class="skill-tags">
+          <span class="skill-tag">Grafana</span>
+          <span class="skill-tag">Prometheus</span>
+          <span class="skill-tag">Opensearch</span>
+          <span class="skill-tag">SonarQube</span>
+          <span class="skill-tag">Zabbix</span>
+        </div>
+      </div>
+      <div class="skill-group">
+        <div class="skill-category">Desarrollo</div>
+        <div class="skill-tags">
+          <span class="skill-tag">Laravel</span>
+          <span class="skill-tag">Vue.js</span>
+          <span class="skill-tag">React</span>
+          <span class="skill-tag">Node.js</span>
+          <span class="skill-tag">Express</span>
+        </div>
+      </div>
+      <div class="skill-group">
+        <div class="skill-category">Data</div>
+        <div class="skill-tags">
+          <span class="skill-tag">Kibana</span>
+          <span class="skill-tag">ElasticSearch</span>
+          <span class="skill-tag">Pandas</span>
+          <span class="skill-tag">MySQL</span>
+          <span class="skill-tag">MongoDB</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">03 / 05</div>
+</section>
+
+<!-- SLIDE 4: CERTIFICACIONES + DOCENCIA -->
+<section class="slide">
+  <div class="bg-grid"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="split-grid">
+      <div>
+        <div class="tag">Certificaciones</div>
+        <h2 class="headline headline-md">Credenciales <span class="gradient-text">verificadas</span></h2>
+        <div style="margin-top:1.5rem;">
+          <div class="cert-card">
+            <div class="cert-name">AWS Certified Cloud Practitioner</div>
+            <div class="cert-issuer">Amazon Web Services</div>
+            <div class="cert-year">2023</div>
+          </div>
+          <div class="cert-card">
+            <div class="cert-name">Microsoft Certified: Azure Fundamentals</div>
+            <div class="cert-issuer">Microsoft (AZ-900)</div>
+            <div class="cert-year">2022</div>
+          </div>
+          <div class="cert-card">
+            <div class="cert-name">CI/CD Certification</div>
+            <div class="cert-issuer">IBM</div>
+            <div class="cert-year">2024</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="tag">Docencia</div>
+        <h2 class="headline headline-md">Formacion <span class="gradient-text">impartida</span></h2>
+        <div style="margin-top:1.5rem;">
+          <div class="teaching-item">
+            <div class="teaching-year">2026</div>
+            <div class="teaching-role">Instructor Bootcamp DevOps</div>
+            <div class="teaching-where">T-Systems &middot; Incubadora de Talento UGR</div>
+          </div>
+          <div class="teaching-item">
+            <div class="teaching-year">2025</div>
+            <div class="teaching-role">Instructor Bootcamp DevOps</div>
+            <div class="teaching-where">T-Systems &middot; Bootcamp interno</div>
+          </div>
+          <div class="teaching-item">
+            <div class="teaching-year">2024</div>
+            <div class="teaching-role">Instructor Bootcamp DevOps</div>
+            <div class="teaching-where">T-Systems &middot; Camara de Comercio Granada</div>
+          </div>
+          <div class="teaching-item">
+            <div class="teaching-year">2018 – 2021</div>
+            <div class="teaching-role">Instructor Web Development</div>
+            <div class="teaching-where">CEI &middot; Webestudios</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">04 / 05</div>
+</section>
+
+<!-- SLIDE 5: QUE VAMOS A HACER -->
+<section class="slide">
+  <div class="bg-glow" style="width:700px;height:700px;background:var(--accent-magenta);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner bootcamp-hero">
+    <div class="tag">Bootcamp DevOps 2026</div>
+    <h2 class="headline headline-lg">4 dias para pasar de <span class="gradient-text">cero a produccion</span></h2>
+    <div class="bootcamp-stats">
+      <div class="stat-card">
+        <div class="stat-value">18h</div>
+        <div class="stat-label">De formacion</div>
+        <div class="stat-sub">4 dias &middot; 9:30 – 14:00</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">70%</div>
+        <div class="stat-label">Hands-on</div>
+        <div class="stat-sub">Labs en parejas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">1</div>
+        <div class="stat-label">App real</div>
+        <div class="stat-sub">Bookstore fullstack</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">7</div>
+        <div class="stat-label">Herramientas</div>
+        <div class="stat-sub">Git, Docker, K8s...</div>
+      </div>
+    </div>
+    <div class="bootcamp-days">
+      <div class="day-card">
+        <div class="day-num">Dia 1</div>
+        <div class="day-title">Del codigo al container</div>
+        <div class="day-desc">Git + Docker + Compose</div>
+      </div>
+      <div class="day-card">
+        <div class="day-num">Dia 2</div>
+        <div class="day-title">Pipeline automatico</div>
+        <div class="day-desc">GitHub Actions CI/CD</div>
+      </div>
+      <div class="day-card">
+        <div class="day-num">Dia 3</div>
+        <div class="day-title">Orquestar containers</div>
+        <div class="day-desc">Kubernetes + Helm + ArgoCD</div>
+      </div>
+      <div class="day-card">
+        <div class="day-num">Dia 4</div>
+        <div class="day-title">Infraestructura y cierre</div>
+        <div class="day-desc">Terraform + Monitoring</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">05 / 05</div>
+</section>
+
+<!-- NAV SLIDE -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Navegacion</div>
+    <h2 class="headline headline-lg">Continuar con el <span class="gradient-text">bootcamp</span></h2>
+    <div class="nav-links">
+      <div></div>
+      <a href="dia1-bloque1-cultura-devops.html" class="nav-link nav-next">
+        <span class="nav-label">Siguiente</span>
+        <span class="nav-title">Cultura DevOps</span>
+        <span class="nav-arrow">&rarr;</span>
+      </a>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+</section>
+
+<script>
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('btn-dark').classList.toggle('active', theme === 'dark');
+  document.getElementById('btn-light').classList.toggle('active', theme === 'light');
+  localStorage.setItem('slide-theme', theme);
+}
+
+// Load saved theme
+const saved = localStorage.getItem('slide-theme');
+if (saved) setTheme(saved);
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'ArrowRight') {
+    e.preventDefault();
+    const slides = document.querySelectorAll('.slide');
+    const current = Math.round(window.scrollY / window.innerHeight);
+    const next = Math.min(current + 1, slides.length - 1);
+    slides[next].scrollIntoView({ behavior: 'smooth' });
+  }
+  if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+    e.preventDefault();
+    const slides = document.querySelectorAll('.slide');
+    const current = Math.round(window.scrollY / window.innerHeight);
+    const prev = Math.max(current - 1, 0);
+    slides[prev].scrollIntoView({ behavior: 'smooth' });
+  }
+});
+</script>
+
+</body>
+</html>

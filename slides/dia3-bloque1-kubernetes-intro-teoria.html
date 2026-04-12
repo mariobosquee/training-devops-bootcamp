@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teoria: Kubernetes Intro — Bootcamp DevOps 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00a3e0; --accent-2: #6366f1;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00a3e0; --accent-2: #6366f1;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); min-height: 100vh; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(2.5rem, 6vw, 5rem); }
+  .headline-lg { font-size: clamp(1.8rem, 4vw, 3rem); }
+  .headline-md { font-size: clamp(1.4rem, 3vw, 2rem); }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .body-text { font-size: 1.1rem; line-height: 1.8; color: var(--text-muted); margin-bottom: 1rem; }
+
+  .bg-glow { position: fixed; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: fixed; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  strong { color: var(--text-primary); }
+
+  .container { max-width: 860px; margin: 0 auto; padding: 6rem 2rem 4rem; position: relative; z-index: 2; }
+
+  .cover { text-align: center; margin-bottom: 4rem; padding-bottom: 3rem; border-bottom: 1px solid var(--border); }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 2rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.4rem; font-style: italic; color: var(--text-muted); margin-top: 0.5rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 1.5rem auto; }
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1rem; }
+
+  .section { margin-bottom: 3rem; }
+
+  .slide-list { list-style: none; padding: 0; margin: 1rem 0 1.5rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.05rem; position: relative; border-bottom: 1px solid var(--border); line-height: 1.6; }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; overflow-x: auto; }
+
+  .slide-table { width: 100%; margin: 1.5rem 0; border-collapse: separate; border-spacing: 0 0.4rem; }
+  .slide-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 0.6rem 1.2rem; text-align: left; }
+  .slide-table td { padding: 1rem 1.2rem; background: var(--bg-card); font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; }
+  .slide-table tr td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; color: var(--text-primary); }
+  .slide-table tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  .back-link { display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--accent-1); text-decoration: none; padding: 0.8rem 1.8rem; border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); border-radius: 100px; transition: all 0.2s; margin-top: 2rem; }
+  .back-link:hover { background: var(--accent-1); color: white; }
+
+  .footer { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; }
+</style>
+</head>
+<body>
+
+<div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;top:-200px;right:-100px;"></div>
+<div class="bg-glow" style="width:500px;height:500px;background:#6366f1;bottom:-200px;left:-100px;"></div>
+<div class="bg-noise"></div>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed" style="text-decoration:none;"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+<div class="container">
+
+  <div class="cover">
+    <div class="cover-brand">T-Systems &middot; Universidad de Granada &middot; 2026</div>
+    <span class="tag">Teoria &middot; Dia 3 &mdash; Bloque 1</span>
+    <h1 class="headline headline-xl"><span class="gradient-text">Kubernetes Intro</span></h1>
+    <p class="cover-subtitle">Referencia teorica para estudiantes</p>
+    <div class="cover-line"></div>
+  </div>
+
+  <!-- Seccion 1 -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">1. El problema: demasiados contenedores</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">En el Dia 1 dockerizamos nuestra app. En el Dia 2 automatizamos la construccion de imagenes con CI/CD. Ahora tenemos imagenes Docker listas para produccion, pero surge un problema nuevo:</p>
+    <ul class="slide-list">
+      <li>Si tenemos 10 microservicios, cada uno con 3 replicas, son <strong>30 contenedores</strong>.</li>
+      <li>Si un contenedor se cae a las 3 de la manana, <strong>quien lo reinicia?</strong></li>
+      <li>Si hay mas trafico, <strong>quien lanza mas contenedores?</strong></li>
+      <li>Si actualizamos una version, <strong>quien para los viejos y arranca los nuevos?</strong></li>
+    </ul>
+    <p class="body-text">Hacer todo esto a mano con <code style="font-family:'JetBrains Mono',monospace;font-size:0.9em;background:var(--bg-card);padding:0.15rem 0.5rem;border-radius:6px;border:1px solid var(--border);">docker run</code> es inviable. Necesitamos un <strong>orquestador de contenedores</strong>.</p>
+  </div>
+
+  <!-- Seccion 2 -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">2. Que es Kubernetes</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Kubernetes (K8s) es un sistema de orquestacion de contenedores creado por Google. Su trabajo es:</p>
+    <ul class="slide-list">
+      <li><strong>Desplegar</strong> contenedores automaticamente.</li>
+      <li><strong>Escalar</strong> (mas o menos replicas segun la carga).</li>
+      <li><strong>Recuperarse</strong> de fallos (self-healing).</li>
+      <li><strong>Actualizar</strong> sin downtime (rolling updates).</li>
+    </ul>
+    <p class="body-text">Analogia para entenderlo:</p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div>
+      <pre class="terminal-body">Kubernetes es como el director de un hotel.
+
+- Los pods son las habitaciones (cada una tiene un huesped = contenedor).
+- El director asigna habitaciones a los huespedes.
+- Si una habitacion tiene un problema, el director reubica al huesped en otra.
+- Si llegan muchos huespedes, el director abre mas habitaciones.
+- Si un huesped se va, la habitacion se libera automaticamente.
+
+Tu no gestionas las habitaciones una a una. Le dices al director:
+"Quiero 3 habitaciones con vista al mar" y el se encarga.</pre>
+    </div>
+  </div>
+
+  <!-- Seccion 3 -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">3. Arquitectura simplificada</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Kubernetes tiene dos partes principales:</p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div>
+      <pre class="terminal-body">+-----------------------------------------------+
+|              CONTROL PLANE (cerebro)           |
+|                                                |
+|  - API Server: recibe tus ordenes (kubectl)    |
+|  - Scheduler: decide donde va cada pod         |
+|  - Controller Manager: vigila que todo este OK |
+|  - etcd: base de datos del estado del cluster  |
++-----------------------------------------------+
+          |              |              |
+   +------+------+ +----+-------+ +----+-------+
+   | Worker Node | | Worker Node | | Worker Node |
+   |  (musculo)  | |  (musculo)  | |  (musculo)  |
+   |             | |             | |             |
+   | [Pod] [Pod] | | [Pod] [Pod] | | [Pod]       |
+   +-------------+ +-------------+ +-------------+</pre>
+    </div>
+    <ul class="slide-list">
+      <li><strong>Control Plane</strong> (cerebro): toma decisiones. Tu le hablas a el.</li>
+      <li><strong>Worker Nodes</strong> (musculos): ejecutan los contenedores. Hacen el trabajo real.</li>
+    </ul>
+    <p class="body-text">En nuestro laboratorio usaremos <strong>kind</strong> (Kubernetes IN Docker), que simula todo esto en tu portatil.</p>
+  </div>
+
+  <!-- Seccion 4 -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">4. Conceptos clave</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Solo necesitas conocer cinco conceptos para empezar:</p>
+    <table class="slide-table">
+      <thead><tr><th>Concepto</th><th>Que es</th><th>Analogia hotel</th></tr></thead>
+      <tbody>
+        <tr><td>Pod</td><td>La unidad minima de K8s. Contiene uno o mas contenedores.</td><td>Una habitacion</td></tr>
+        <tr><td>Deployment</td><td>Gestiona un grupo de pods. Controla cuantas replicas hay, las actualiza y las recupera si fallan.</td><td>El plano de planta</td></tr>
+        <tr><td>Service</td><td>Una direccion de red estable para acceder a los pods. Los pods van y vienen, pero el Service siempre apunta a los correctos.</td><td>El telefono de recepcion</td></tr>
+        <tr><td>ConfigMap</td><td>Almacena configuracion (variables de entorno, archivos de config) separada del contenedor.</td><td>El manual de instrucciones</td></tr>
+        <tr><td>Namespace</td><td>Organiza los recursos del cluster en grupos logicos.</td><td>Las plantas del hotel</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Seccion 5 -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">5. kubectl: tu herramienta principal</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;"><code style="font-family:'JetBrains Mono',monospace;font-size:0.9em;background:var(--bg-card);padding:0.15rem 0.5rem;border-radius:6px;border:1px solid var(--border);">kubectl</code> es el CLI que usamos para hablar con Kubernetes. Todos los comandos siguen el mismo patron:</p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div>
+      <pre class="terminal-body">kubectl &lt;verbo&gt; &lt;recurso&gt; [nombre] [opciones]</pre>
+    </div>
+    <p class="body-text">Comandos esenciales:</p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div>
+      <pre class="terminal-body"># Ver recursos
+kubectl get pods                    # Lista pods
+kubectl get deployments             # Lista deployments
+kubectl get services                # Lista services
+kubectl get all                     # Lista todo
+
+# Inspeccionar
+kubectl describe pod &lt;nombre&gt;       # Detalle de un pod
+kubectl logs &lt;nombre&gt;               # Ver logs de un contenedor
+
+# Crear/modificar
+kubectl apply -f archivo.yaml       # Aplica un manifiesto YAML
+kubectl delete -f archivo.yaml      # Elimina lo definido en el YAML
+
+# Depurar
+kubectl exec -it &lt;pod&gt; -- bash      # Entrar al contenedor
+kubectl port-forward pod/&lt;pod&gt; 8080:80  # Redirigir puerto local al pod</pre>
+    </div>
+  </div>
+
+  <!-- Resumen -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">Resumen</span></h2>
+    <table class="slide-table" style="margin-top:1.5rem;">
+      <thead><tr><th>Antes (Docker manual)</th><th>Ahora (Kubernetes)</th></tr></thead>
+      <tbody>
+        <tr><td>Tu decides donde corre cada contenedor</td><td>K8s lo decide automaticamente</td></tr>
+        <tr><td>Si un contenedor se cae, lo reinicias tu</td><td>K8s lo reinicia solo (self-healing)</td></tr>
+        <tr><td>Escalas a mano con docker run</td><td>K8s escala con kubectl scale</td></tr>
+        <tr><td>Actualizas parando todo</td><td>K8s hace rolling updates sin downtime</td></tr>
+        <tr><td>Todo en un solo servidor</td><td>Distribuido en multiples nodos</td></tr>
+      </tbody>
+    </table>
+    <p class="body-text">En el laboratorio vamos a crear nuestro primer cluster con kind y lanzar nuestro primer pod.</p>
+  </div>
+
+  <div style="text-align:center;padding-top:2rem;border-top:1px solid var(--border);">
+    <a href="index.html" class="back-link">&larr; Volver al indice</a>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span class="logo">carlos<strong>palanca</strong>.es</span> &middot; Bootcamp DevOps 2026
+</div>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+</script>
+
+</body>
+</html>

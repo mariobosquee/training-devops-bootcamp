@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teoria: Git Practico — Bootcamp DevOps 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); min-height: 100vh; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(2.5rem, 6vw, 5rem); }
+  .headline-lg { font-size: clamp(1.8rem, 4vw, 3rem); }
+  .headline-md { font-size: clamp(1.4rem, 3vw, 2.2rem); }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .body-text { font-size: 1.15rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 0.5rem; }
+  strong { color: var(--text-primary); }
+
+  .bg-glow { position: fixed; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: fixed; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; text-decoration: none; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 6rem 2rem 4rem; position: relative; z-index: 2; }
+
+  .cover { text-align: center; margin-bottom: 4rem; }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 2rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.4rem; font-style: italic; color: var(--text-muted); margin-top: 0.5rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 1.5rem auto; }
+
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1.5rem; }
+
+  section { margin-bottom: 3.5rem; }
+  section h2 { margin-bottom: 1.2rem; }
+  section h3 { font-family: 'DM Sans', sans-serif; font-size: 1.2rem; font-weight: 700; margin: 1.5rem 0 0.8rem; color: var(--text-primary); }
+
+  .slide-list { list-style: none; padding: 0; margin-top: 1rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.1rem; position: relative; border-bottom: 1px solid var(--border); }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; align-items: center; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-left: auto; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; }
+
+  .slide-table { width: 100%; margin: 1.5rem 0; border-collapse: separate; border-spacing: 0 0.4rem; }
+  .slide-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 0.6rem 1.2rem; text-align: left; }
+  .slide-table td { padding: 1rem 1.2rem; background: var(--bg-card); font-size: 1rem; color: var(--text-muted); }
+  .slide-table tr td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; color: var(--text-primary); }
+  .slide-table tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  blockquote { border-left: 3px solid var(--accent-1); padding: 1rem 1.5rem; margin: 1.5rem 0; background: var(--bg-card); border-radius: 0 12px 12px 0; color: var(--text-muted); font-size: 1.1rem; font-style: italic; }
+
+  .back-link { display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--accent-1); text-decoration: none; padding: 0.6rem 1.5rem; border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); border-radius: 100px; transition: all 0.2s; margin-top: 2rem; }
+  .back-link:hover { background: var(--accent-1); color: white; }
+
+  .footer { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; }
+
+  ol.numbered { list-style: none; padding: 0; margin-top: 1rem; counter-reset: step; }
+  ol.numbered li { padding: 0.6rem 0 0.6rem 2rem; color: var(--text-muted); font-size: 1.1rem; position: relative; border-bottom: 1px solid var(--border); counter-increment: step; }
+  ol.numbered li::before { content: counter(step) '.'; position: absolute; left: 0; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--accent-1); font-size: 0.95rem; }
+</style>
+</head>
+<body>
+
+<div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;top:-200px;right:-100px;"></div>
+<div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-200px;left:-100px;"></div>
+<div class="bg-noise"></div>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+<div class="container">
+
+  <div class="cover">
+    <div class="cover-brand">Dia 1 &middot; Bloque 2 &middot; Teoria</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">Git Practico</span></h1>
+    <p class="cover-subtitle">Ramas, commits, merge, Pull Requests y flujo de trabajo con GitHub</p>
+    <div class="cover-line"></div>
+  </div>
+
+  <!-- Workflow del bootcamp -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">1. Workflow del bootcamp</span></h2>
+    <p class="body-text">Durante estos 4 dias vamos a trabajar siempre con el mismo flujo:</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-label">Git workflow</span>
+      </div>
+      <div class="terminal-body">1. Crear rama          git checkout -b feature/nombre-descriptivo
+2. Hacer cambios       git add . && git commit -m "descripcion clara"
+3. Subir rama          git push -u origin feature/nombre-descriptivo
+4. Abrir PR en GitHub  (desde la web)
+5. Companero revisa    (comenta, aprueba)
+6. Merge a main        (boton en GitHub)</div>
+    </div>
+
+    <h3>Convenciones que usaremos</h3>
+    <table class="slide-table">
+      <thead>
+        <tr><th>Elemento</th><th>Convencion</th><th>Ejemplo</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Ramas</td><td><code>feature/descripcion-corta</code></td><td><code>feature/dockerfile-backend</code></td></tr>
+        <tr><td>Commits</td><td>Imperativo, en espanol, sin punto final</td><td><code>Anade Dockerfile para la API</code></td></tr>
+        <tr><td>PRs</td><td>Titulo corto + descripcion de que cambia</td><td><code>Dockerizar backend con multi-stage</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Cheat sheet rapido -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">2. Cheat sheet rapido</span></h2>
+    <table class="slide-table">
+      <thead>
+        <tr><th>Comando</th><th>Que hace</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>git status</code></td><td>Ver estado (usadlo siempre antes de todo)</td></tr>
+        <tr><td><code>git add .</code></td><td>Preparar todos los cambios</td></tr>
+        <tr><td><code>git commit -m "msg"</code></td><td>Guardar cambios con mensaje</td></tr>
+        <tr><td><code>git push</code></td><td>Subir a GitHub</td></tr>
+        <tr><td><code>git pull</code></td><td>Descargar cambios de GitHub</td></tr>
+        <tr><td><code>git checkout -b nombre</code></td><td>Crear rama y moverte a ella</td></tr>
+        <tr><td><code>git checkout main</code></td><td>Volver a la rama principal</td></tr>
+        <tr><td><code>git merge nombre</code></td><td>Fusionar rama con la actual</td></tr>
+        <tr><td><code>git log --oneline</code></td><td>Historial resumido</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Resolver conflictos -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">3. Recordatorio: resolver conflictos</span></h2>
+    <p class="body-text">Si dos personas tocan la misma linea:</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-label">Conflicto de merge</span>
+      </div>
+      <div class="terminal-body">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+Tu version
+=======
+Version del companero
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature</div>
+    </div>
+    <ol class="numbered">
+      <li>Elige que texto conservar.</li>
+      <li>Borra las marcas <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code>, <code>=======</code>, <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code>.</li>
+      <li><code>git add</code> + <code>git commit</code>.</li>
+    </ol>
+    <blockquote>No es un error. Es parte del flujo normal.</blockquote>
+  </section>
+
+  <div style="text-align:center; margin-top:3rem;">
+    <a href="index.html" class="back-link">&larr; Volver al indice</a>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span class="logo">carlos<strong>palanca</strong>.es</span> &middot; Bootcamp DevOps 2026
+</div>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+</script>
+
+</body>
+</html>

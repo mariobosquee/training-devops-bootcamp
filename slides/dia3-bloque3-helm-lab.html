@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratorio Helm — Bootcamp DevOps 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00d4aa; --accent-2: #00a3e0;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00d4aa; --accent-2: #00a3e0;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); }
+
+  .slide { min-height: 100vh; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; padding: 4rem; position: relative; overflow: hidden; }
+  .slide-inner { max-width: 1100px; width: 100%; z-index: 2; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(3rem, 8vw, 6.5rem); }
+  .headline-lg { font-size: clamp(2rem, 5vw, 4rem); }
+  .headline-md { font-size: clamp(1.5rem, 3vw, 2.5rem); }
+  .body-text { font-size: 1.15rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1.5rem; }
+  .slide-num { position: absolute; bottom: 2rem; right: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-dim); }
+  .slide-footer { position: absolute; bottom: 2rem; left: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); }
+
+  .bg-glow { position: absolute; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: absolute; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+  .bg-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+  .slide-cover { text-align: center; }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.8rem; font-style: italic; color: var(--text-muted); margin-top: 1rem; margin-bottom: 3rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 2rem auto; }
+  .cover-meta { display: flex; gap: 2rem; justify-content: center; font-size: 0.9rem; color: var(--text-dim); }
+
+  .slide-list { list-style: none; padding: 0; margin-top: 1rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.1rem; position: relative; border-bottom: 1px solid var(--border); }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; }
+
+  .slide-table { width: 100%; margin: 1.5rem 0; border-collapse: separate; border-spacing: 0 0.4rem; }
+  .slide-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 0.6rem 1.2rem; text-align: left; }
+  .slide-table td { padding: 1rem 1.2rem; background: var(--bg-card); font-size: 1rem; color: var(--text-muted); }
+  .slide-table tr td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; color: var(--text-primary); }
+  .slide-table tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  strong { color: var(--text-primary); }
+
+  .alert { background: var(--bg-card); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); border-radius: 14px; padding: 1.5rem; margin: 1.5rem 0; }
+  .alert-title { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-1); margin-bottom: 0.5rem; }
+
+  .troubleshoot { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; margin: 1.5rem 0; }
+  .troubleshoot-title { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: #febc2e; margin-bottom: 1rem; }
+  .troubleshoot-item { padding: 0.8rem 0; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .troubleshoot-item:last-child { border-bottom: none; }
+  .troubleshoot-problem { font-size: 0.9rem; color: var(--text-primary); }
+  .troubleshoot-solution { font-size: 0.9rem; color: var(--text-muted); }
+
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: white; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 600; margin-right: 0.75rem; flex-shrink: 0; }
+
+  .nav-links { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem; }
+  .nav-link { display: flex; flex-direction: column; gap: 0.3rem; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; text-decoration: none; color: var(--text-primary); transition: border-color 0.3s, transform 0.2s; }
+  .nav-link:hover { border-color: var(--accent-1); transform: translateY(-3px); }
+  .nav-prev { text-align: left; }
+  .nav-next { text-align: right; }
+  .nav-arrow { font-size: 1.5rem; color: var(--accent-1); }
+  .nav-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); }
+  .nav-title { font-family: 'Instrument Serif', serif; font-size: 1.4rem; }
+
+  @media print { .slide { page-break-after: always; } .theme-toggle, .logo-fixed { display: none; } html { scroll-snap-type: none; } }
+</style>
+</head>
+<body>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed" style="text-decoration:none;"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+<!-- SLIDE 1: COVER -->
+<section class="slide slide-cover">
+  <div class="bg-glow" style="width:600px;height:600px;background:#00d4aa;top:-200px;right:-100px;"></div><div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;bottom:-200px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="cover-brand">T-Systems &middot; Universidad de Granada &middot; 2026</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">Laboratorio: Helm</span></h1>
+    <p class="cover-subtitle">Bootcamp DevOps 2026 &mdash; Dia 3 &mdash; Bloque 3</p>
+    <div class="cover-line"></div>
+    <div class="cover-meta"><span>40 min laboratorio + 10 min showcase</span><span>&middot;</span><span>En parejas</span></div>
+  </div>
+  <div class="slide-num">01 / 13</div>
+</section>
+
+<!-- SLIDE 2: ESTRUCTURA -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Estructura</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Partes del laboratorio</span></h2>
+    <table class="slide-table">
+      <thead><tr><th>Parte</th><th>Que hareis</th><th>Tiempo</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Instalar nginx con Helm</td><td>15 min</td></tr>
+        <tr><td>2</td><td>Personalizar con values</td><td>15 min</td></tr>
+        <tr><td>3</td><td>Rollback y desinstalar</td><td>10 min</td></tr>
+        <tr><td>4</td><td>Showcase</td><td>10 min</td></tr>
+      </tbody>
+    </table>
+    <p class="body-text">Uno escribe, el otro revisa. Alternad roles en cada parte.</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">02 / 13</div>
+</section>
+
+<!-- SLIDE 3: ANTES DE EMPEZAR -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Preparacion</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Antes de empezar</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text">Comprobad que teneis todo listo:</p>
+
+      <p class="body-text"><span class="step-num">1</span> <strong>Cluster corriendo con CampusEats:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl get all
+# Debeis ver los deployments, pods y services del bloque anterior</pre></div>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Helm instalado:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">helm version
+# Debeis ver: version.BuildInfo{Version:"v3.x.x", ...}
+# Si no: https://helm.sh/docs/intro/install/</pre></div>
+
+      <p class="body-text"><span class="step-num">3</span> <strong>kubectl conectado al cluster:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl cluster-info
+# Debeis ver: Kubernetes control plane is running at https://...</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">03 / 13</div>
+</section>
+
+<!-- SLIDE 4: PARTE 1 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;top:-150px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 1 &middot; 15 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Instalar nginx con Helm</span></h2>
+    <p class="cover-subtitle">Un solo comando para desplegar una aplicacion completa</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">04 / 13</div>
+</section>
+
+<!-- SLIDE 5: PARTE 1 - Repo y search -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 1</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Anadir repositorio y buscar</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">1</span> <strong>Anadir el repositorio de Bitnami:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">helm repo add bitnami https://charts.bitnami.com/bitnami</pre></div>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Actualizar el indice:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">helm repo update</pre></div>
+
+      <p class="body-text"><span class="step-num">3</span> <strong>Buscar Charts de nginx:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">helm search repo nginx
+# Vereis varios resultados. Usaremos bitnami/nginx</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">05 / 13</div>
+</section>
+
+<!-- SLIDE 6: PARTE 1 - Install y verificar -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 1</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Instalar y verificar</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">4</span> <strong>Instalar nginx:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">helm install mi-nginx bitnami/nginx</pre></div>
+
+      <p class="body-text"><span class="step-num">5</span> <strong>Verificar que se ha desplegado:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl get pods
+# Debeis ver: mi-nginx-xxxx  STATUS: Running (esperad 1-2 min)
+
+kubectl get svc
+# Debeis ver: mi-nginx  con un puerto asignado</pre></div>
+
+      <p class="body-text"><span class="step-num">6</span> <strong>Ver los releases de Helm:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">helm list
+# Debeis ver: mi-nginx  con STATUS: deployed</pre></div>
+
+      <div class="alert">
+        <div class="alert-title">Fijaos</div>
+        <p class="body-text">Con un solo comando, Helm ha creado un Deployment, un Service, un ConfigMap y mas. Sin escribir ningun YAML.</p>
+      </div>
+
+      <div class="troubleshoot">
+        <div class="troubleshoot-title">Si algo falla</div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">"repo already exists"</div><div class="troubleshoot-solution">No pasa nada, continuad con <code>helm repo update</code></div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Pod en Pending</div><div class="troubleshoot-solution">Esperad 1-2 minutos. El nodo de kind es lento descargando imagenes</div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">"cannot re-use a name"</div><div class="troubleshoot-solution">Ya existe un release con ese nombre: <code>helm uninstall mi-nginx</code> e intentad de nuevo</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">06 / 13</div>
+</section>
+
+<!-- SLIDE 7: PARTE 2 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;bottom:-150px;right:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 2 &middot; 15 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Personalizar con values</span></h2>
+    <p class="cover-subtitle">Cambiar la configuracion sin tocar los YAML originales</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">07 / 13</div>
+</section>
+
+<!-- SLIDE 8: PARTE 2 - values-custom.yaml -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 2</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Crear y aplicar values</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">1</span> <strong>Crear <code>values-custom.yaml</code>:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">replicaCount: 3
+
+service:
+  type: ClusterIP</pre></div>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Aplicar con helm upgrade:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">helm upgrade mi-nginx bitnami/nginx -f values-custom.yaml</pre></div>
+
+      <p class="body-text"><span class="step-num">3</span> <strong>Verificar que ahora hay 3 replicas:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl get pods
+# Debeis ver 3 pods de mi-nginx (esperad a que esten Running)</pre></div>
+
+      <p class="body-text"><span class="step-num">4</span> <strong>Ver el historial de Helm:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">helm history mi-nginx
+# Debeis ver 2 revisiones: la original y la actualizada</pre></div>
+
+      <div class="troubleshoot">
+        <div class="troubleshoot-title">Si algo falla</div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Solo 1 pod Running</div><div class="troubleshoot-solution">Esperad 1-2 min. Comprobad: <code>kubectl get pods -w</code></div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Error de YAML en values</div><div class="troubleshoot-solution">Revisad la indentacion. <code>replicaCount</code> va sin espacios delante</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">08 / 13</div>
+</section>
+
+<!-- SLIDE 9: PARTE 3 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;top:-150px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 3 &middot; 10 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Rollback y desinstalar</span></h2>
+    <p class="cover-subtitle">Volver atras y limpiar con un solo comando</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">09 / 13</div>
+</section>
+
+<!-- SLIDE 10: PARTE 3 - Rollback -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 3</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Rollback y limpiar</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">1</span> <strong>Hacer rollback a la revision 1 (1 replica):</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">helm rollback mi-nginx 1</pre></div>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Verificar que volvemos a 1 pod:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl get pods
+# Debeis ver solo 1 pod de mi-nginx</pre></div>
+
+      <p class="body-text"><span class="step-num">3</span> <strong>Ver el historial completo (3 revisiones):</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">helm history mi-nginx
+# Revision 1: install
+# Revision 2: upgrade (3 replicas)
+# Revision 3: rollback to 1</pre></div>
+
+      <p class="body-text"><span class="step-num">4</span> <strong>Desinstalar completamente:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">helm uninstall mi-nginx</pre></div>
+
+      <p class="body-text"><span class="step-num">5</span> <strong>Verificar que se ha limpiado todo:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">helm list
+# No debeis ver mi-nginx
+
+kubectl get pods
+# Los pods de mi-nginx han desaparecido</pre></div>
+
+      <div class="alert">
+        <div class="alert-title">Clave</div>
+        <p class="body-text">Helm gestiona todo el ciclo de vida: install, upgrade, rollback, uninstall. Un solo comando para cada operacion.</p>
+      </div>
+
+      <div class="troubleshoot">
+        <div class="troubleshoot-title">Si algo falla</div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Rollback no reduce pods</div><div class="troubleshoot-solution">Esperad 30s. Los pods tardan en terminar: <code>kubectl get pods -w</code></div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Uninstall deja recursos</div><div class="troubleshoot-solution">Comprobad PVCs: <code>kubectl get pvc</code> y eliminadlos manualmente si quedan</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">10 / 13</div>
+</section>
+
+<!-- SLIDE 11: SHOWCASE -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-150px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Showcase &middot; 10 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Showcase</span></h2>
+    <p class="cover-subtitle">Demostrad vuestro trabajo al resto de la clase</p>
+    <div style="margin-top:3rem; text-align:left; max-width:700px; margin-left:auto; margin-right:auto;">
+      <p class="body-text">Cada pareja tiene <strong>2-3 minutos</strong> para mostrar:</p>
+      <ul class="slide-list">
+        <li><code>helm install</code> en directo &mdash; instalad un Chart y enseniad los recursos creados</li>
+        <li><code>helm history</code> &mdash; enseniad las revisiones despues de upgrade y rollback</li>
+        <li><strong>Explicad brevemente</strong> &mdash; que problema resuelve Helm vs kubectl apply manual</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">11 / 13</div>
+</section>
+
+<!-- SLIDE 12: RESUMEN -->
+<section class="slide">
+  <div class="bg-glow" style="width:700px;height:700px;background:#00d4aa;top:50%;left:50%;transform:translate(-50%,-50%);"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Resumen</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Lo que habeis conseguido</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <div class="alert">
+        <div class="alert-title">Resumen</div>
+        <p class="body-text">1. Anadido un repositorio de Charts (Bitnami) y buscado Charts disponibles</p>
+        <p class="body-text">2. Instalado nginx con un solo comando de Helm</p>
+        <p class="body-text">3. Personalizado la instalacion con un fichero values-custom.yaml (3 replicas)</p>
+        <p class="body-text">4. Hecho rollback a la version anterior y verificado el historial</p>
+        <p class="body-text">5. Desinstalado limpiamente con helm uninstall</p>
+      </div>
+
+      <p class="body-text" style="margin-top:1.5rem;">Siguiente bloque: <strong>GitOps con ArgoCD</strong> — automatizar despliegues desde Git.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">12 / 13</div>
+</section>
+
+<!-- SLIDE 13: NAVEGACION -->
+<section class="slide">
+  <div class="bg-glow" style="width:600px;height:600px;background:#00d4aa;bottom:-200px;left:-100px;"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Navegacion</div>
+    <h2 class="headline headline-lg">Volver a las <span class="gradient-text">slides</span></h2>
+    <div class="nav-links">
+      <a href="dia3-bloque3-helm.html" class="nav-link nav-prev"><span class="nav-arrow">&larr;</span><span class="nav-label">Slides</span><span class="nav-title">Helm</span></a>
+      <a href="dia3-bloque4-gitops-argocd.html" class="nav-link nav-next"><span class="nav-label">Siguiente</span><span class="nav-title">GitOps ArgoCD</span><span class="nav-arrow">&rarr;</span></a>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+</section>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+document.addEventListener('keydown',e=>{const sl=document.querySelectorAll('.slide');const c=Math.round(window.scrollY/window.innerHeight);if(['ArrowDown',' ','ArrowRight'].includes(e.key)){e.preventDefault();sl[Math.min(c+1,sl.length-1)].scrollIntoView({behavior:'smooth'});}if(['ArrowUp','ArrowLeft'].includes(e.key)){e.preventDefault();sl[Math.max(c-1,0)].scrollIntoView({behavior:'smooth'});}});
+</script>
+
+</body>
+</html>

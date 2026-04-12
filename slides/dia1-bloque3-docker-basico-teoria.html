@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teoria: Docker Basico — Bootcamp DevOps 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); min-height: 100vh; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(2.5rem, 6vw, 5rem); }
+  .headline-lg { font-size: clamp(1.8rem, 4vw, 3rem); }
+  .headline-md { font-size: clamp(1.4rem, 3vw, 2.2rem); }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .body-text { font-size: 1.15rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 0.5rem; }
+  strong { color: var(--text-primary); }
+
+  .bg-glow { position: fixed; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: fixed; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; text-decoration: none; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 6rem 2rem 4rem; position: relative; z-index: 2; }
+
+  .cover { text-align: center; margin-bottom: 4rem; }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 2rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.4rem; font-style: italic; color: var(--text-muted); margin-top: 0.5rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 1.5rem auto; }
+
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1.5rem; }
+
+  section { margin-bottom: 3.5rem; }
+  section h2 { margin-bottom: 1.2rem; }
+  section h3 { font-family: 'DM Sans', sans-serif; font-size: 1.2rem; font-weight: 700; margin: 1.5rem 0 0.8rem; color: var(--text-primary); }
+  section h4 { font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; font-weight: 600; margin: 1.2rem 0 0.5rem; color: var(--accent-2); }
+
+  .slide-list { list-style: none; padding: 0; margin-top: 1rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.1rem; position: relative; border-bottom: 1px solid var(--border); }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; align-items: center; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-left: auto; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; }
+
+  .slide-table { width: 100%; margin: 1.5rem 0; border-collapse: separate; border-spacing: 0 0.4rem; }
+  .slide-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 0.6rem 1.2rem; text-align: left; }
+  .slide-table td { padding: 1rem 1.2rem; background: var(--bg-card); font-size: 1rem; color: var(--text-muted); }
+  .slide-table tr td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; color: var(--text-primary); }
+  .slide-table tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  blockquote { border-left: 3px solid var(--accent-1); padding: 1rem 1.5rem; margin: 1.5rem 0; background: var(--bg-card); border-radius: 0 12px 12px 0; color: var(--text-muted); font-size: 1.1rem; font-style: italic; }
+
+  .back-link { display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--accent-1); text-decoration: none; padding: 0.6rem 1.5rem; border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); border-radius: 100px; transition: all 0.2s; margin-top: 2rem; }
+  .back-link:hover { background: var(--accent-1); color: white; }
+
+  .footer { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.9em; background: var(--bg-card); padding: 0.15rem 0.4rem; border-radius: 4px; color: var(--accent-2); }
+</style>
+</head>
+<body>
+
+<div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;top:-200px;right:-100px;"></div>
+<div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-200px;left:-100px;"></div>
+<div class="bg-noise"></div>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+<div class="container">
+
+  <div class="cover">
+    <div class="cover-brand">Dia 1 &middot; Bloque 3 &middot; Teoria</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">Docker Basico</span></h1>
+    <p class="cover-subtitle">Contenedores, imagenes, Dockerfile, volumenes, redes y Docker Compose</p>
+    <div class="cover-line"></div>
+  </div>
+
+  <!-- 1. El problema que resuelve Docker -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">1. El problema que resuelve Docker</span></h2>
+    <blockquote>"En mi ordenador funciona."</blockquote>
+    <p class="body-text">El problema es que tu ordenador tiene unas versiones de software, unas configuraciones y unas librerias que no son las mismas que tiene el ordenador de tu companero, ni el servidor donde se despliega la aplicacion.</p>
+    <p class="body-text">Docker resuelve esto: empaqueta tu aplicacion junto con <strong>todo lo que necesita</strong> para funcionar, de forma que se ejecuta exactamente igual en cualquier sitio.</p>
+  </section>
+
+  <!-- 2. Que es un contenedor -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">2. Que es un contenedor</span></h2>
+    <h3>La analogia del contenedor de transporte maritimo</h3>
+    <p class="body-text">Piensa en un contenedor de un barco de carga:</p>
+    <ul class="slide-list">
+      <li>Tiene un tamano estandar que encaja en cualquier barco, camion o tren.</li>
+      <li>Dentro puedes meter lo que quieras: fruta, muebles, electronica.</li>
+      <li>No importa que haya dentro: el contenedor se transporta siempre igual.</li>
+      <li>El contenido esta aislado y protegido del exterior.</li>
+    </ul>
+    <p class="body-text" style="margin-top:1.5rem;">Un contenedor de software funciona exactamente igual:</p>
+    <ul class="slide-list">
+      <li>Tiene un formato estandar que funciona en cualquier ordenador con Docker.</li>
+      <li>Dentro lleva tu aplicacion y todo lo que necesita (librerias, configuracion, runtime).</li>
+      <li>No importa si el ordenador tiene Windows, Mac o Linux: el contenedor funciona igual.</li>
+      <li>La aplicacion esta aislada del resto del sistema.</li>
+    </ul>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-label">Contenedor</span>
+      </div>
+      <div class="terminal-body">+--------------------------------------------------+
+|  CONTENEDOR DE TRANSPORTE                        |
+|  +--------------------------------------------+  |
+|  |  Tu aplicacion                             |  |
+|  |  + Node.js 18                              |  |
+|  |  + Librerias (express, sqlite...)          |  |
+|  |  + Configuracion                           |  |
+|  |  + Codigo fuente                           |  |
+|  +--------------------------------------------+  |
++--------------------------------------------------+
+   Funciona igual en: tu portatil, el de tu companero,
+   un servidor en la nube, un Raspberry Pi...</div>
+    </div>
+  </section>
+
+  <!-- 3. Contenedores vs VMs -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">3. Contenedores vs Maquinas Virtuales</span></h2>
+    <p class="body-text">Los contenedores se parecen a las maquinas virtuales, pero son mucho mas ligeros.</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-label">VM vs Contenedor</span>
+      </div>
+      <div class="terminal-body"> MAQUINA VIRTUAL                    CONTENEDOR
++---------------------+         +---------------------+
+|   App A  |  App B   |         |   App A  |  App B   |
++----------+----------+         +----------+----------+
+| Libs A   | Libs B   |         | Libs A   | Libs B   |
++----------+----------+         +----------+----------+
+|  SO      |  SO      |         |    Motor Docker     |
+| completo | completo |         |   (Docker Engine)   |
++----------+----------+         +---------------------+
+|     Hypervisor      |         | Sistema Operativo   |
++---------------------+         |    del host         |
+| Sistema Operativo   |         +---------------------+
+|    del host         |         |     Hardware        |
++---------------------+         +---------------------+
+|     Hardware        |
++---------------------+</div>
+    </div>
+    <table class="slide-table">
+      <thead>
+        <tr><th>Caracteristica</th><th>Maquina Virtual</th><th>Contenedor</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Tamano</td><td>Gigabytes (GB)</td><td>Megabytes (MB)</td></tr>
+        <tr><td>Tiempo de arranque</td><td>Minutos</td><td>Segundos</td></tr>
+        <tr><td>Sistema operativo</td><td>Uno completo cada</td><td>Comparte el del host</td></tr>
+        <tr><td>Consumo de recursos</td><td>Alto</td><td>Bajo</td></tr>
+        <tr><td>Aislamiento</td><td>Total</td><td>A nivel de proceso</td></tr>
+      </tbody>
+    </table>
+    <blockquote>Un contenedor es como un apartamento en un edificio (comparten estructura), mientras que una VM es como una casa independiente (cada una con sus cimientos).</blockquote>
+  </section>
+
+  <!-- 4. Arquitectura de Docker -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">4. Arquitectura de Docker</span></h2>
+    <p class="body-text">Docker tiene tres componentes principales:</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-label">Arquitectura</span>
+      </div>
+      <div class="terminal-body">+----------------+          +------------------+          +------------------+
+|                |  ordenes |                  |  descarga |                  |
+|  Docker Client | -------> |  Docker Daemon   | -------> |  Docker Registry |
+|  (CLI)         |          |  (dockerd)       |          |  (Docker Hub)    |
+|                |          |                  |          |                  |
+| Tu escribes    |          | El motor que     |          | Almacen de       |
+| los comandos   |          | ejecuta todo     |          | imagenes         |
++----------------+          +------------------+          +------------------+
+                                    |
+                            +-------+-------+
+                            |               |
+                      +-----------+   +-----------+
+                      | Contenedor|   | Contenedor|
+                      |     A     |   |     B     |
+                      +-----------+   +-----------+</div>
+    </div>
+    <ul class="slide-list">
+      <li><strong>Docker Client (CLI):</strong> Es lo que usas tu. Cuando escribes <code>docker run</code>, estas usando el cliente.</li>
+      <li><strong>Docker Daemon (dockerd):</strong> Es el motor que corre en segundo plano. Recibe las ordenes del cliente, descarga imagenes, crea contenedores, etc.</li>
+      <li><strong>Docker Registry (Docker Hub):</strong> Es como un "app store" de imagenes Docker. Ahi estan las imagenes oficiales de Node.js, Nginx, Python, etc.</li>
+    </ul>
+  </section>
+
+  <!-- 5. Imagen vs Contenedor -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">5. Imagen vs Contenedor</span></h2>
+
+    <h3>Imagen = La receta</h3>
+    <ul class="slide-list">
+      <li>Es un archivo de solo lectura que contiene todo lo necesario para ejecutar una aplicacion.</li>
+      <li>Se define mediante un Dockerfile.</li>
+      <li>Se puede compartir y reutilizar.</li>
+      <li>No cambia una vez creada.</li>
+    </ul>
+
+    <h3>Contenedor = El plato cocinado</h3>
+    <ul class="slide-list">
+      <li>Es una instancia en ejecucion de una imagen.</li>
+      <li>Puedes crear muchos contenedores a partir de la misma imagen.</li>
+      <li>Cada contenedor es independiente.</li>
+      <li>Puede tener su propio estado (archivos modificados, datos, etc.).</li>
+    </ul>
+
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-label">Imagen vs Contenedor</span>
+      </div>
+      <div class="terminal-body">  IMAGEN (receta)                    CONTENEDORES (platos)
++------------------+          +-------------+  +-------------+
+|  node:18-alpine  |  ------> | Contenedor 1|  | Contenedor 2|
+|  + tu codigo     |  ------> | (puerto 3001)|  | (puerto 3002)|
+|  + dependencias  |  ------> | Contenedor 3|
++------------------+          +-------------+</div>
+    </div>
+    <blockquote>La imagen es la receta de una tortilla de patatas. El contenedor es la tortilla que cocinas siguiendo esa receta. Puedes hacer 10 tortillas con la misma receta, y cada una es independiente.</blockquote>
+  </section>
+
+  <!-- 6. El Dockerfile -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">6. El Dockerfile</span></h2>
+    <p class="body-text">Un Dockerfile es un archivo de texto que contiene las instrucciones para crear una imagen Docker. Es literalmente la receta paso a paso.</p>
+
+    <h3>Instrucciones basicas</h3>
+
+    <h4>FROM &mdash; La imagen base</h4>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">Dockerfile</span></div>
+      <div class="terminal-body">FROM node:18-alpine</div>
+    </div>
+    <p class="body-text">Le dice a Docker: "empieza con esta imagen base". <code>node:18-alpine</code> es una imagen ligera que ya trae Node.js 18 instalado.</p>
+
+    <h4>WORKDIR &mdash; El directorio de trabajo</h4>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">Dockerfile</span></div>
+      <div class="terminal-body">WORKDIR /app</div>
+    </div>
+    <p class="body-text">Establece el directorio donde se ejecutaran los siguientes comandos. Si no existe, la crea.</p>
+
+    <h4>COPY &mdash; Copiar archivos</h4>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">Dockerfile</span></div>
+      <div class="terminal-body">COPY package*.json ./
+COPY src/ ./src/</div>
+    </div>
+    <p class="body-text">Copia archivos desde tu ordenador hacia dentro de la imagen.</p>
+
+    <h4>RUN &mdash; Ejecutar comandos durante la construccion</h4>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">Dockerfile</span></div>
+      <div class="terminal-body">RUN npm install</div>
+    </div>
+    <p class="body-text">Ejecuta un comando mientras se construye la imagen. Se ejecuta una vez, al construir la imagen, no cada vez que arrancas un contenedor.</p>
+
+    <h4>EXPOSE &mdash; Documentar puertos</h4>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">Dockerfile</span></div>
+      <div class="terminal-body">EXPOSE 3001</div>
+    </div>
+    <p class="body-text">Documenta que la aplicacion usa el puerto 3001. Es informativo: no abre el puerto automaticamente.</p>
+
+    <h4>CMD &mdash; El comando de arranque</h4>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">Dockerfile</span></div>
+      <div class="terminal-body">CMD ["node", "src/index.js"]</div>
+    </div>
+    <p class="body-text">Define que comando se ejecuta cuando arrancas un contenedor. Solo puede haber un CMD por Dockerfile.</p>
+
+    <h3>Ejemplo completo: Dockerfile para nuestra API</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">Dockerfile</span></div>
+      <div class="terminal-body">FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY src/ ./src/
+EXPOSE 3001
+CMD ["node", "src/index.js"]</div>
+    </div>
+    <p class="body-text"><strong>Lectura en lenguaje natural:</strong> "Empieza con Node 18 Alpine, trabaja en /app, copia los archivos de dependencias, instala las dependencias, copia el codigo fuente, documenta el puerto 3001 y cuando arranques ejecuta la aplicacion."</p>
+  </section>
+
+  <!-- 7. Comandos esenciales -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">7. Comandos esenciales de Docker</span></h2>
+
+    <h3>docker build &mdash; Construir una imagen</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">docker build -t bootcamp-api .</div>
+    </div>
+    <p class="body-text"><code>-t bootcamp-api</code> le da un nombre (tag) a la imagen. <code>.</code> indica que el Dockerfile esta en el directorio actual.</p>
+
+    <h3>docker run &mdash; Crear y arrancar un contenedor</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">docker run -p 3001:3001 bootcamp-api</div>
+    </div>
+    <p class="body-text"><code>-p 3001:3001</code> mapea el puerto 3001 de tu ordenador al 3001 del contenedor. Formato: <code>-p PUERTO_HOST:PUERTO_CONTENEDOR</code>. Anade <code>-d</code> para ejecutar en segundo plano.</p>
+
+    <h3>docker ps &mdash; Ver contenedores en ejecucion</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">docker ps</div>
+    </div>
+    <p class="body-text">Muestra los contenedores que estan corriendo. Anade <code>-a</code> para ver tambien los parados.</p>
+
+    <h3>docker stop &mdash; Parar un contenedor</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">docker stop NOMBRE_O_ID</div>
+    </div>
+
+    <h3>docker logs &mdash; Ver los logs</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">docker logs NOMBRE_O_ID</div>
+    </div>
+    <p class="body-text">Muestra lo que la aplicacion ha escrito en la consola. Anade <code>-f</code> para seguir los logs en tiempo real.</p>
+
+    <h3>docker exec &mdash; Ejecutar un comando dentro de un contenedor</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">docker exec -it NOMBRE_O_ID sh</div>
+    </div>
+    <p class="body-text">Abre una terminal dentro del contenedor. Util para explorar que hay dentro.</p>
+  </section>
+
+  <!-- 8. Docker Compose -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">8. Docker Compose</span></h2>
+
+    <h3>Que es Docker Compose</h3>
+    <p class="body-text">Una aplicacion real suele tener varios servicios: una API, un frontend, una base de datos... Docker Compose permite definir y ejecutar varios contenedores a la vez usando un unico archivo de configuracion: <code>docker-compose.yml</code>.</p>
+
+    <h3>Por que usar Docker Compose</h3>
+    <ul class="slide-list">
+      <li><strong>Un solo comando</strong> para levantar toda la aplicacion: <code>docker compose up</code></li>
+      <li><strong>Configuracion como codigo:</strong> todo queda documentado en el archivo YAML.</li>
+      <li><strong>Redes automaticas:</strong> los contenedores pueden comunicarse entre si por nombre.</li>
+      <li><strong>Facil de compartir:</strong> cualquier companero puede levantar todo el entorno con un solo comando.</li>
+    </ul>
+
+    <h3>Estructura basica de docker-compose.yml</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">docker-compose.yml</span></div>
+      <div class="terminal-body">services:
+  api:
+    build: ./backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api</div>
+    </div>
+    <ul class="slide-list">
+      <li><code>services:</code> define los contenedores que queremos ejecutar.</li>
+      <li><code>build:</code> le dice que construya la imagen usando el Dockerfile de esa carpeta.</li>
+      <li><code>ports:</code> mapea puertos, igual que <code>-p</code> en <code>docker run</code>.</li>
+      <li><code>environment:</code> define variables de entorno.</li>
+      <li><code>depends_on:</code> indica que el frontend necesita que la API este levantada primero.</li>
+    </ul>
+
+    <h3>Comandos de Docker Compose</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">docker compose up -d        # Levantar todos los servicios en segundo plano
+docker compose ps           # Ver el estado de los servicios
+docker compose logs         # Ver logs de todos los servicios
+docker compose logs api     # Ver logs solo de la API
+docker compose down         # Parar y eliminar todos los servicios
+docker compose build        # Reconstruir las imagenes</div>
+    </div>
+  </section>
+
+  <!-- Resumen -->
+  <section>
+    <h2 class="headline headline-lg"><span class="gradient-text">Resumen</span></h2>
+    <table class="slide-table">
+      <thead>
+        <tr><th>Concepto</th><th>Explicacion sencilla</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Contenedor</td><td>Paquete que lleva tu app y todo lo que necesita</td></tr>
+        <tr><td>Imagen</td><td>La receta para crear un contenedor</td></tr>
+        <tr><td>Dockerfile</td><td>El archivo con las instrucciones para crear la imagen</td></tr>
+        <tr><td>Docker Compose</td><td>Herramienta para levantar varios contenedores a la vez</td></tr>
+        <tr><td>Docker Hub</td><td>Almacen online de imagenes Docker</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div style="text-align:center; margin-top:3rem;">
+    <a href="index.html" class="back-link">&larr; Volver al indice</a>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span class="logo">carlos<strong>palanca</strong>.es</span> &middot; Bootcamp DevOps 2026
+</div>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+</script>
+
+</body>
+</html>

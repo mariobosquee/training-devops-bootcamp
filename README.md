@@ -40,6 +40,50 @@ Ya estais listos para el Dia 1.
 
 ---
 
+## Slides y laboratorios
+
+Todo el material del bootcamp esta en la carpeta `slides/`. Abrid el indice en el navegador:
+
+```bash
+# Desde la raiz del repositorio
+open slides/index.html        # macOS
+xdg-open slides/index.html    # Linux
+start slides/index.html       # Windows
+```
+
+Desde el indice podeis acceder a todas las presentaciones y laboratorios de los 4 dias.
+
+| Dia | Temas |
+|-----|-------|
+| Dia 1 | Cultura DevOps, Git, Docker, Docker Compose |
+| Dia 2 | CI/CD, GitHub Actions, Pipelines |
+| Dia 3 | Kubernetes, Helm, GitOps con ArgoCD |
+| Dia 4 | Terraform, Prometheus, Grafana, Proyecto Final |
+
+---
+
+## Cheat sheets
+
+Referencia rapida de comandos en `cheat-sheets/`:
+
+| Archivo | Herramienta | Dias |
+|---------|-------------|------|
+| [git.md](cheat-sheets/git.md) | Git | 1-4 |
+| [docker.md](cheat-sheets/docker.md) | Docker | 1-4 |
+| [kubectl.md](cheat-sheets/kubectl.md) | kubectl | 3-4 |
+| [github-actions.md](cheat-sheets/github-actions.md) | GitHub Actions | 2 |
+| [helm.md](cheat-sheets/helm.md) | Helm | 3 |
+| [terraform.md](cheat-sheets/terraform.md) | Terraform | 4 |
+| [argocd.md](cheat-sheets/argocd.md) | ArgoCD | 3 |
+
+---
+
+## Preparar el entorno
+
+Seguid la guia completa en [SETUP-ALUMNO.md](SETUP-ALUMNO.md) (20-30 minutos).
+
+---
+
 ## Aplicaciones
 
 ### CampusEats (app principal — Dias 1-4)
@@ -117,6 +161,12 @@ training-devops-bootcamp/
 │   ├── campuseats/          ← App principal
 │   ├── myfitness/           ← App Docker basico
 │   └── quizbattle/          ← App multi-servicio
+├── slides/                  ← Presentaciones y laboratorios
+│   ├── index.html           ← Indice del bootcamp
+│   ├── dia1-*.html          ← Slides y labs del Dia 1
+│   ├── dia2-*.html          ← Slides y labs del Dia 2
+│   ├── dia3-*.html          ← Slides y labs del Dia 3
+│   └── dia4-*.html          ← Slides y labs del Dia 4
 ├── .github/
 │   └── workflows/
 │       └── ci.yml           ← Pipeline CI/CD (Dia 2)

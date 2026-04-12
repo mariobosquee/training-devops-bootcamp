@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratorio GitOps con ArgoCD — Bootcamp DevOps 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); }
+
+  .slide { min-height: 100vh; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; padding: 4rem; position: relative; overflow: hidden; }
+  .slide-inner { max-width: 1100px; width: 100%; z-index: 2; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(3rem, 8vw, 6.5rem); }
+  .headline-lg { font-size: clamp(2rem, 5vw, 4rem); }
+  .headline-md { font-size: clamp(1.5rem, 3vw, 2.5rem); }
+  .body-text { font-size: 1.15rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1.5rem; }
+  .slide-num { position: absolute; bottom: 2rem; right: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-dim); }
+  .slide-footer { position: absolute; bottom: 2rem; left: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); }
+
+  .bg-glow { position: absolute; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: absolute; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+  .bg-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+  .slide-cover { text-align: center; }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.8rem; font-style: italic; color: var(--text-muted); margin-top: 1rem; margin-bottom: 3rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 2rem auto; }
+  .cover-meta { display: flex; gap: 2rem; justify-content: center; font-size: 0.9rem; color: var(--text-dim); }
+
+  .slide-list { list-style: none; padding: 0; margin-top: 1rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.1rem; position: relative; border-bottom: 1px solid var(--border); }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; }
+
+  .slide-table { width: 100%; margin: 1.5rem 0; border-collapse: separate; border-spacing: 0 0.4rem; }
+  .slide-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 0.6rem 1.2rem; text-align: left; }
+  .slide-table td { padding: 1rem 1.2rem; background: var(--bg-card); font-size: 1rem; color: var(--text-muted); }
+  .slide-table tr td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; color: var(--text-primary); }
+  .slide-table tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  strong { color: var(--text-primary); }
+
+  .alert { background: var(--bg-card); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); border-radius: 14px; padding: 1.5rem; margin: 1.5rem 0; }
+  .alert-title { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-1); margin-bottom: 0.5rem; }
+
+  .troubleshoot { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; margin: 1.5rem 0; }
+  .troubleshoot-title { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: #febc2e; margin-bottom: 1rem; }
+  .troubleshoot-item { padding: 0.8rem 0; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .troubleshoot-item:last-child { border-bottom: none; }
+  .troubleshoot-problem { font-size: 0.9rem; color: var(--text-primary); }
+  .troubleshoot-solution { font-size: 0.9rem; color: var(--text-muted); }
+
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: white; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 600; margin-right: 0.75rem; flex-shrink: 0; }
+
+  .nav-links { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem; }
+  .nav-link { display: flex; flex-direction: column; gap: 0.3rem; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; text-decoration: none; color: var(--text-primary); transition: border-color 0.3s, transform 0.2s; }
+  .nav-link:hover { border-color: var(--accent-1); transform: translateY(-3px); }
+  .nav-prev { text-align: left; }
+  .nav-next { text-align: right; }
+  .nav-arrow { font-size: 1.5rem; color: var(--accent-1); }
+  .nav-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); }
+  .nav-title { font-family: 'Instrument Serif', serif; font-size: 1.4rem; }
+
+  @media print { .slide { page-break-after: always; } .theme-toggle, .logo-fixed { display: none; } html { scroll-snap-type: none; } }
+</style>
+</head>
+<body>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed" style="text-decoration:none;"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+<!-- SLIDE 1: COVER -->
+<section class="slide slide-cover">
+  <div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;top:-200px;right:-100px;"></div><div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-200px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="cover-brand">T-Systems &middot; Universidad de Granada &middot; 2026</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">Laboratorio: GitOps con ArgoCD</span></h1>
+    <p class="cover-subtitle">Bootcamp DevOps 2026 &mdash; Dia 3 &mdash; Bloque 4</p>
+    <div class="cover-line"></div>
+    <div class="cover-meta"><span>25 min laboratorio + 10 min showcase</span><span>&middot;</span><span>En parejas</span></div>
+  </div>
+  <div class="slide-num">01 / 11</div>
+</section>
+
+<!-- SLIDE 2: ESTRUCTURA -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Estructura</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Partes del laboratorio</span></h2>
+    <table class="slide-table">
+      <thead><tr><th>Parte</th><th>Que hareis</th><th>Tiempo</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Instalar ArgoCD</td><td>10 min</td></tr>
+        <tr><td>2</td><td>Crear Application</td><td>10 min</td></tr>
+        <tr><td>3</td><td>Auto-sync con cambio en Git</td><td>5 min</td></tr>
+        <tr><td>4</td><td>Showcase (demo a la clase)</td><td>10 min</td></tr>
+      </tbody>
+    </table>
+    <p class="body-text">Uno escribe, el otro revisa. Alternad roles en cada parte.</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">02 / 11</div>
+</section>
+
+<!-- SLIDE 3: ANTES DE EMPEZAR -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Preparacion</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Antes de empezar</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text">Comprobad que teneis todo listo:</p>
+
+      <ul class="slide-list">
+        <li>Cluster <strong>kind</strong> corriendo con CampusEats desplegado</li>
+        <li>Carpeta <code>k8s/</code> con los manifiestos en vuestro repositorio de GitHub</li>
+        <li>Necesitais la <strong>URL del repo</strong> (ej: <code>https://github.com/usuario/campuseats.git</code>)</li>
+        <li>El repositorio debe ser <strong>publico</strong> (o tener token configurado)</li>
+      </ul>
+
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl get pods
+# Debeis ver los pods de CampusEats corriendo
+
+ls k8s/
+# Debeis ver los manifiestos YAML</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">03 / 11</div>
+</section>
+
+<!-- SLIDE 4: PARTE 1 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;top:-150px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 1 &middot; 10 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Instalar ArgoCD</span></h2>
+    <p class="cover-subtitle">El motor de GitOps en vuestro cluster</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">04 / 11</div>
+</section>
+
+<!-- SLIDE 5: PARTE 1 - Instalar ArgoCD -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 1</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Instalar ArgoCD en el cluster</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">1</span> <strong>Crear el namespace y aplicar la instalacion:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl create namespace argocd
+
+kubectl apply -n argocd \
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml</pre></div>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Esperar a que los pods esten listos:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl wait --for=condition=Ready pods --all -n argocd --timeout=120s
+
+kubectl get pods -n argocd
+# Debeis ver 5-7 pods en estado Running</pre></div>
+
+      <p class="body-text"><span class="step-num">3</span> <strong>Obtener la contrasena del admin:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl -n argocd get secret argocd-initial-admin-secret \
+  -o jsonpath="{.data.password}" | base64 -d
+# Copiad la contrasena que aparece</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">05 / 11</div>
+</section>
+
+<!-- SLIDE 6: PARTE 1 - Acceder a la UI -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 1</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Acceder a la UI de ArgoCD</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">4</span> <strong>Port-forward al servidor de ArgoCD:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl port-forward svc/argocd-server -n argocd 8443:443</pre></div>
+
+      <p class="body-text"><span class="step-num">5</span> <strong>Abrir en el navegador:</strong> <strong>https://localhost:8443</strong></p>
+      <p class="body-text">El navegador mostrara un aviso de certificado. Aceptadlo (Advanced &gt; Proceed).</p>
+
+      <ul class="slide-list">
+        <li><strong>Usuario:</strong> <code>admin</code></li>
+        <li><strong>Contrasena:</strong> la que copiasteis en el paso anterior</li>
+      </ul>
+
+      <div class="troubleshoot">
+        <div class="troubleshoot-title">Si algo falla</div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Puerto 8443 en uso</div><div class="troubleshoot-solution">Usad <code>8444:443</code> y acceded a <code>:8444</code></div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Pods no arrancan</div><div class="troubleshoot-solution"><code>kubectl describe pod -n argocd</code> para ver errores</div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Contrasena no funciona</div><div class="troubleshoot-solution">Comprobad que copiais sin espacios ni saltos de linea</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">06 / 11</div>
+</section>
+
+<!-- SLIDE 7: PARTE 2 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-150px;right:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 2 &middot; 10 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Crear Application</span></h2>
+    <p class="cover-subtitle">Conectar ArgoCD con vuestro repositorio Git</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">07 / 11</div>
+</section>
+
+<!-- SLIDE 8: PARTE 2 - Crear App en ArgoCD -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 2</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Crear la Application en la UI</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">1</span> <strong>En la UI de ArgoCD, click en NEW APP y rellenad:</strong></p>
+
+      <table class="slide-table">
+        <thead><tr><th>Campo</th><th>Valor</th></tr></thead>
+        <tbody>
+          <tr><td>Application Name</td><td>campuseats</td></tr>
+          <tr><td>Project</td><td>default</td></tr>
+          <tr><td>Sync Policy</td><td>Manual</td></tr>
+          <tr><td>Repository URL</td><td>https://github.com/USUARIO/REPO.git</td></tr>
+          <tr><td>Revision</td><td>HEAD</td></tr>
+          <tr><td>Path</td><td>k8s</td></tr>
+          <tr><td>Cluster URL</td><td>https://kubernetes.default.svc</td></tr>
+          <tr><td>Namespace</td><td>default</td></tr>
+        </tbody>
+      </table>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Click en CREATE</strong> y luego <strong>SYNC</strong> para desplegar.</p>
+
+      <p class="body-text"><span class="step-num">3</span> <strong>Verificar:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl get pods
+# Los pods deben coincidir con lo que muestra ArgoCD en la UI</pre></div>
+
+      <div class="alert">
+        <div class="alert-title">Clave</div>
+        <p class="body-text">ArgoCD ahora conoce el estado deseado (Git) y el estado actual (cluster). Si coinciden, la app aparece en verde (<strong>Synced</strong>).</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">08 / 11</div>
+</section>
+
+<!-- SLIDE 9: PARTE 3 TITULO + CONTENIDO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;top:-150px;right:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 3 &middot; 5 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Auto-sync</span></h2>
+    <p class="cover-subtitle">Cambiar en Git y ver como ArgoCD detecta la diferencia</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">09 / 11</div>
+</section>
+
+<!-- SLIDE 10: PARTE 3 - Cambiar replicas -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 3</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Cambiar replicas en Git</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">1</span> <strong>Editad <code>k8s/backend-deployment.yaml</code></strong> y cambiad las replicas:</p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body"># Cambiad replicas: 1 a replicas: 2
+spec:
+  replicas: 2</pre></div>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Commit y push:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">git add k8s/backend-deployment.yaml
+git commit -m "scale backend to 2 replicas"
+git push</pre></div>
+
+      <p class="body-text"><span class="step-num">3</span> <strong>En ArgoCD UI:</strong> click en <strong>REFRESH</strong> — la app aparecera como <strong>OutOfSync</strong> (amarillo).</p>
+
+      <p class="body-text"><span class="step-num">4</span> <strong>Click en SYNC</strong> para aplicar el cambio.</p>
+
+      <p class="body-text"><span class="step-num">5</span> <strong>Verificar:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl get pods
+# Debeis ver 2 pods del backend</pre></div>
+
+      <div class="alert">
+        <div class="alert-title">GitOps en accion</div>
+        <p class="body-text">No habeis tocado <code>kubectl</code> para escalar. El cambio fue en Git y ArgoCD lo aplico al cluster. Esto es GitOps.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">10 / 11</div>
+</section>
+
+<!-- SLIDE 11: SHOWCASE -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;bottom:-150px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Showcase &middot; 10 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Showcase</span></h2>
+    <p class="cover-subtitle">Demostrad vuestro trabajo al resto de la clase</p>
+    <div style="margin-top:3rem; text-align:left; max-width:700px; margin-left:auto; margin-right:auto;">
+      <p class="body-text">Cada pareja tiene <strong>2-3 minutos</strong> para mostrar:</p>
+      <ul class="slide-list">
+        <li><strong>ArgoCD UI</strong> — enseniad la app en estado Synced</li>
+        <li><strong>Terminal</strong> — <code>kubectl get pods</code> mostrando las 2 replicas</li>
+        <li><strong>Explicacion breve</strong> — que es GitOps y por que es util</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">11 / 13</div>
+</section>
+
+<!-- SLIDE 12: FIN DEL DIA -->
+<section class="slide">
+  <div class="bg-glow" style="width:700px;height:700px;background:#00a3e0;top:-250px;right:-150px;"></div>
+  <div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-200px;left:-100px;"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Fin del dia</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">Fin del Dia 3</span></h1>
+    <p class="cover-subtitle">Kubernetes, Helm y GitOps</p>
+    <div class="cover-line"></div>
+    <div style="max-width:700px;margin:2rem auto;text-align:left;">
+      <p class="body-text"><strong>Hoy habeis conseguido:</strong></p>
+      <ul class="slide-list">
+        <li>Crear un cluster Kubernetes con kind y lanzar pods</li>
+        <li>Desplegar la CampusEats completa con Deployments, Services y ConfigMaps</li>
+        <li>Gestionar aplicaciones con Helm: install, upgrade, rollback</li>
+        <li>Implementar GitOps con ArgoCD — Git como fuente de verdad</li>
+      </ul>
+      <p class="body-text" style="margin-top:1.5rem;"><strong>Manana:</strong> Terraform y Observabilidad — infraestructura como codigo y monitoring.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">12 / 13</div>
+</section>
+
+<!-- SLIDE 13: NAVEGACION -->
+<section class="slide">
+  <div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;bottom:-200px;left:-100px;"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Navegacion</div>
+    <h2 class="headline headline-lg">Continuar con el <span class="gradient-text">bootcamp</span></h2>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link nav-prev"><span class="nav-arrow">&larr;</span><span class="nav-label">Menu</span><span class="nav-title">Indice del Bootcamp</span></a>
+      <a href="dia4-bloque1-cloud-terraform.html" class="nav-link nav-next"><span class="nav-label">Siguiente dia</span><span class="nav-title">Dia 4: Terraform</span><span class="nav-arrow">&rarr;</span></a>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+</section>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+document.addEventListener('keydown',e=>{const sl=document.querySelectorAll('.slide');const c=Math.round(window.scrollY/window.innerHeight);if(['ArrowDown',' ','ArrowRight'].includes(e.key)){e.preventDefault();sl[Math.min(c+1,sl.length-1)].scrollIntoView({behavior:'smooth'});}if(['ArrowUp','ArrowLeft'].includes(e.key)){e.preventDefault();sl[Math.max(c-1,0)].scrollIntoView({behavior:'smooth'});}});
+</script>
+
+</body>
+</html>

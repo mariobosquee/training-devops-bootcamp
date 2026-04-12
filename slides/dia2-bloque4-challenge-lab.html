@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Challenge: Mejora tu Pipeline — Bootcamp DevOps 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); }
+
+  .slide { min-height: 100vh; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; padding: 4rem; position: relative; overflow: hidden; }
+  .slide-inner { max-width: 1100px; width: 100%; z-index: 2; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(3rem, 8vw, 6.5rem); }
+  .headline-lg { font-size: clamp(2rem, 5vw, 4rem); }
+  .headline-md { font-size: clamp(1.5rem, 3vw, 2.5rem); }
+  .body-text { font-size: 1.15rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1.5rem; }
+  .slide-num { position: absolute; bottom: 2rem; right: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-dim); }
+  .slide-footer { position: absolute; bottom: 2rem; left: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); }
+
+  .bg-glow { position: absolute; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: absolute; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+  .bg-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+  .slide-cover { text-align: center; }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.8rem; font-style: italic; color: var(--text-muted); margin-top: 1rem; margin-bottom: 3rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 2rem auto; }
+  .cover-meta { display: flex; gap: 2rem; justify-content: center; font-size: 0.9rem; color: var(--text-dim); }
+
+  .slide-list { list-style: none; padding: 0; margin-top: 1rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.1rem; position: relative; border-bottom: 1px solid var(--border); }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; }
+
+  .slide-table { width: 100%; margin: 1.5rem 0; border-collapse: separate; border-spacing: 0 0.4rem; }
+  .slide-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 0.6rem 1.2rem; text-align: left; }
+  .slide-table td { padding: 1rem 1.2rem; background: var(--bg-card); font-size: 1rem; color: var(--text-muted); }
+  .slide-table tr td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; color: var(--text-primary); }
+  .slide-table tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  strong { color: var(--text-primary); }
+
+  .alert { background: var(--bg-card); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); border-radius: 14px; padding: 1.5rem; margin: 1.5rem 0; }
+  .alert-title { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-1); margin-bottom: 0.5rem; }
+
+  .troubleshoot { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; margin: 1.5rem 0; }
+  .troubleshoot-title { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: #febc2e; margin-bottom: 1rem; }
+  .troubleshoot-item { padding: 0.8rem 0; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .troubleshoot-item:last-child { border-bottom: none; }
+  .troubleshoot-problem { font-size: 0.9rem; color: var(--text-primary); }
+  .troubleshoot-solution { font-size: 0.9rem; color: var(--text-muted); }
+
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: white; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 600; margin-right: 0.75rem; flex-shrink: 0; }
+
+  .nav-links { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem; }
+  .nav-link { display: flex; flex-direction: column; gap: 0.3rem; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; text-decoration: none; color: var(--text-primary); transition: border-color 0.3s, transform 0.2s; }
+  .nav-link:hover { border-color: var(--accent-1); transform: translateY(-3px); }
+  .nav-prev { text-align: left; }
+  .nav-next { text-align: right; }
+  .nav-arrow { font-size: 1.5rem; color: var(--accent-1); }
+  .nav-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); }
+  .nav-title { font-family: 'Instrument Serif', serif; font-size: 1.4rem; }
+
+  @media print { .slide { page-break-after: always; } .theme-toggle, .logo-fixed { display: none; } html { scroll-snap-type: none; } }
+</style>
+</head>
+<body>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed" style="text-decoration:none;"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+<!-- SLIDE 1: COVER -->
+<section class="slide slide-cover">
+  <div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;top:-200px;right:-100px;"></div><div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-200px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="cover-brand">T-Systems &middot; Universidad de Granada &middot; 2026</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">Challenge: Mejora tu Pipeline</span></h1>
+    <p class="cover-subtitle">Bootcamp DevOps 2026 &mdash; Dia 2 &mdash; Bloque 4</p>
+    <div class="cover-line"></div>
+    <div class="cover-meta"><span>60 min challenges + 15 min demos</span><span>&middot;</span><span>En parejas, competitivo</span></div>
+  </div>
+  <div class="slide-num">01 / 15</div>
+</section>
+
+<!-- SLIDE 2: REGLAS Y PUNTUACION -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Reglas</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Reglas del challenge</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <ul class="slide-list">
+        <li>Trabajad en parejas. Cada challenge vale puntos.</li>
+        <li>Puntuacion maxima: <strong>60 puntos</strong></li>
+        <li>Podeis hacer los challenges en cualquier orden</li>
+        <li>Cada challenge debe funcionar (pipeline verde) para puntuar</li>
+        <li>Al final, cada pareja hace una <strong>demo de 2-3 min</strong></li>
+      </ul>
+
+      <table class="slide-table">
+        <thead><tr><th>Challenge</th><th>Descripcion</th><th>Puntos</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Matrix Build (Node 18 y 20)</td><td>15 pts</td></tr>
+          <tr><td>2</td><td>Parallel Jobs (lint y test separados)</td><td>15 pts</td></tr>
+          <tr><td>3</td><td>Conditional Deploy (solo en main)</td><td>10 pts</td></tr>
+          <tr><td>4</td><td>GitHub Secrets</td><td>10 pts</td></tr>
+          <tr><td>5</td><td>PR Workflow con auto-comment</td><td>10 pts</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">02 / 15</div>
+</section>
+
+<!-- SLIDE 3: CHALLENGE 1 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;top:-150px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Challenge 1 &middot; 15 puntos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Matrix Build</span></h2>
+    <p class="cover-subtitle">Testad con multiples versiones de Node.js</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">03 / 15</div>
+</section>
+
+<!-- SLIDE 4: CHALLENGE 1 - Instrucciones -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Challenge 1</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Matrix: Node 18 y 20</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><strong>Objetivo:</strong> Ejecutar los tests con Node.js 18 y Node.js 20 en paralelo.</p>
+
+      <p class="body-text"><span class="step-num">1</span> <strong>Anadid una strategy matrix al job <code>test</code>:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20]
+    steps:
+      - name: Checkout codigo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Instalar dependencias
+        run: npm install
+        working-directory: ./backend
+
+      - name: Ejecutar tests
+        run: npm test
+        working-directory: ./backend</pre></div>
+
+      <div class="alert">
+        <div class="alert-title">Resultado esperado</div>
+        <p class="body-text">En Actions vereis <strong>dos ejecuciones paralelas</strong> del job test: una con Node 18 y otra con Node 20.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">04 / 15</div>
+</section>
+
+<!-- SLIDE 5: CHALLENGE 2 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-150px;right:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Challenge 2 &middot; 15 puntos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Parallel Jobs</span></h2>
+    <p class="cover-subtitle">Separar lint y test en jobs independientes</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">05 / 15</div>
+</section>
+
+<!-- SLIDE 6: CHALLENGE 2 - Instrucciones -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Challenge 2</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Jobs lint y test en paralelo</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><strong>Objetivo:</strong> Crear dos jobs separados que corran en paralelo, y que build dependa de ambos.</p>
+
+      <p class="body-text"><span class="step-num">1</span> <strong>Estructura del workflow:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - run: npm install
+        working-directory: ./frontend
+      - run: npm run lint
+        working-directory: ./frontend
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - run: npm install
+        working-directory: ./backend
+      - run: npm test
+        working-directory: ./backend
+
+  build:
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      # ... build steps</pre></div>
+
+      <div class="alert">
+        <div class="alert-title">Resultado esperado</div>
+        <p class="body-text">En el grafo de Actions, <code>lint</code> y <code>test</code> aparecen al mismo nivel, y <code>build</code> empieza despues de que ambos terminen.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">06 / 15</div>
+</section>
+
+<!-- SLIDE 7: CHALLENGE 3 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;top:-150px;right:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Challenge 3 &middot; 10 puntos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Conditional Deploy</span></h2>
+    <p class="cover-subtitle">Deploy solo en la rama main</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">07 / 15</div>
+</section>
+
+<!-- SLIDE 8: CHALLENGE 3 - Instrucciones -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Challenge 3</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Deploy condicional</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><strong>Objetivo:</strong> Crear un job <code>deploy</code> que solo se ejecute en pushes a <code>main</code>.</p>
+
+      <p class="body-text"><span class="step-num">1</span> <strong>Anadid un job deploy con condicion <code>if</code>:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout codigo
+        uses: actions/checkout@v4
+
+      - name: Simular deploy
+        run: |
+          echo "Deploying to production..."
+          echo "Branch: ${{ github.ref }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Deploy completed!"</pre></div>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Para probar:</strong> cread una rama, pushed a ella, y verificad que deploy NO se ejecuta. Luego merged a main y verificad que SI se ejecuta.</p>
+
+      <div class="alert">
+        <div class="alert-title">Resultado esperado</div>
+        <p class="body-text">El job <code>deploy</code> aparece en gris (skipped) cuando el push es a una rama que no es main.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">08 / 15</div>
+</section>
+
+<!-- SLIDE 9: CHALLENGE 4 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-150px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Challenge 4 &middot; 10 puntos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">GitHub Secrets</span></h2>
+    <p class="cover-subtitle">Usar variables seguras en el pipeline</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">09 / 15</div>
+</section>
+
+<!-- SLIDE 10: CHALLENGE 4 - Instrucciones -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Challenge 4</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Crear y usar secrets</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><strong>Objetivo:</strong> Crear un secret en GitHub y usarlo en el workflow.</p>
+
+      <p class="body-text"><span class="step-num">1</span> <strong>Crear el secret en GitHub:</strong></p>
+      <ul class="slide-list">
+        <li>Settings &rarr; Secrets and variables &rarr; Actions</li>
+        <li>Click en <strong>"New repository secret"</strong></li>
+        <li>Nombre: <code>DEPLOY_ENV</code> &mdash; Valor: <code>production</code></li>
+      </ul>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Usad el secret en un step:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">      - name: Usar secret
+        run: |
+          echo "Deploy environment: $DEPLOY_ENV"
+          echo "El valor real esta oculto en los logs"
+        env:
+          DEPLOY_ENV: ${{ secrets.DEPLOY_ENV }}</pre></div>
+
+      <div class="alert">
+        <div class="alert-title">Resultado esperado</div>
+        <p class="body-text">En los logs, el valor del secret aparece como <code>***</code>. GitHub lo oculta automaticamente para proteger la informacion sensible.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">10 / 15</div>
+</section>
+
+<!-- SLIDE 11: CHALLENGE 5 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;top:-150px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Challenge 5 &middot; 10 puntos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">PR Workflow</span></h2>
+    <p class="cover-subtitle">Workflow que se ejecuta en Pull Requests con auto-comment</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">11 / 15</div>
+</section>
+
+<!-- SLIDE 12: CHALLENGE 5 - Instrucciones -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Challenge 5</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">PR con auto-comment</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><strong>Objetivo:</strong> Crear un workflow que se ejecute en pull requests y deje un comentario automatico.</p>
+
+      <p class="body-text"><span class="step-num">1</span> <strong>Crear <code>.github/workflows/pr.yml</code>:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">name: PR Check
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout codigo
+        uses: actions/checkout@v4
+
+      - name: Ejecutar tests
+        run: |
+          cd backend
+          npm install
+          npm test
+
+      - name: Comentar en el PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Tests passed! Ready for review.'
+            })</pre></div>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Probad:</strong> cread una rama, pushed, abrid un PR, y verificad el comentario automatico.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">12 / 15</div>
+</section>
+
+<!-- SLIDE 13: ERRORES COMUNES -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Ayuda</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Errores comunes</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <div class="troubleshoot">
+        <div class="troubleshoot-title">Problemas frecuentes</div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Error de YAML: "mapping values are not allowed"</div><div class="troubleshoot-solution">Indentacion incorrecta. Usad 2 espacios, nunca tabs</div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Job skipped inesperadamente</div><div class="troubleshoot-solution">Revisad la condicion <code>if:</code> y que <code>needs:</code> apunte al job correcto</div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Matrix no se ejecuta en paralelo</div><div class="troubleshoot-solution">Comprobad que <code>strategy:</code> y <code>matrix:</code> estan bien indentados dentro del job</div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Secret no disponible</div><div class="troubleshoot-solution">Los secrets no estan disponibles en forks. Usad vuestro propio repositorio</div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">PR comment no aparece</div><div class="troubleshoot-solution">Comprobad <code>permissions: pull-requests: write</code> en el workflow</div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">"Resource not accessible by integration"</div><div class="troubleshoot-solution">Falta el bloque <code>permissions:</code> al nivel raiz del workflow</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">13 / 15</div>
+</section>
+
+<!-- SLIDE 14: DEMOS Y PUNTUACION -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-150px;right:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Demos &middot; 15 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Demos y puntuacion</span></h2>
+    <p class="cover-subtitle">Cada pareja muestra sus challenges completados</p>
+    <div style="margin-top:3rem; text-align:left; max-width:700px; margin-left:auto; margin-right:auto;">
+      <p class="body-text">Cada pareja tiene <strong>2-3 minutos</strong> para mostrar:</p>
+      <ul class="slide-list">
+        <li>Pipeline verde en la pestana Actions</li>
+        <li>Grafo del workflow mostrando jobs paralelos</li>
+        <li>Evidencia de cada challenge completado</li>
+        <li>Algo interesante que hayais descubierto</li>
+      </ul>
+      <p class="body-text" style="margin-top:1.5rem;"><strong>Puntuacion:</strong> el instructor verifica cada challenge. Solo puntuan los que tienen el pipeline verde.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">14 / 15</div>
+</section>
+
+<!-- SLIDE 15: FIN DEL DIA -->
+<section class="slide">
+  <div class="bg-glow" style="width:700px;height:700px;background:#00a3e0;top:-250px;right:-150px;"></div>
+  <div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-200px;left:-100px;"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Fin del dia</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">Fin del Dia 2</span></h1>
+    <p class="cover-subtitle">CI/CD y GitHub Actions</p>
+    <div class="cover-line"></div>
+    <div style="max-width:700px;margin:2rem auto;text-align:left;">
+      <p class="body-text"><strong>Hoy habeis conseguido:</strong></p>
+      <ul class="slide-list">
+        <li>Crear un pipeline CI/CD con GitHub Actions</li>
+        <li>Automatizar tests, linting y auditoria de seguridad</li>
+        <li>Publicar imagenes Docker en GitHub Container Registry</li>
+        <li>Optimizar el pipeline con cache y badges</li>
+      </ul>
+      <p class="body-text" style="margin-top:1.5rem;"><strong>Manana:</strong> Kubernetes — desplegaremos la app en un cluster real.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">15 / 16</div>
+</section>
+
+<!-- SLIDE 16: NAVEGACION -->
+<section class="slide">
+  <div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;bottom:-200px;left:-100px;"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Navegacion</div>
+    <h2 class="headline headline-lg">Continuar con el <span class="gradient-text">bootcamp</span></h2>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link nav-prev"><span class="nav-arrow">&larr;</span><span class="nav-label">Menu</span><span class="nav-title">Indice del Bootcamp</span></a>
+      <a href="dia3-bloque1-kubernetes-intro.html" class="nav-link nav-next"><span class="nav-label">Siguiente dia</span><span class="nav-title">Dia 3: Kubernetes</span><span class="nav-arrow">&rarr;</span></a>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+</section>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+document.addEventListener('keydown',e=>{const sl=document.querySelectorAll('.slide');const c=Math.round(window.scrollY/window.innerHeight);if(['ArrowDown',' ','ArrowRight'].includes(e.key)){e.preventDefault();sl[Math.min(c+1,sl.length-1)].scrollIntoView({behavior:'smooth'});}if(['ArrowUp','ArrowLeft'].includes(e.key)){e.preventDefault();sl[Math.max(c-1,0)].scrollIntoView({behavior:'smooth'});}});
+</script>
+
+</body>
+</html>

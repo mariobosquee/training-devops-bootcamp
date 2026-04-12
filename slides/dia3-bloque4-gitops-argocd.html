@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitOps con ArgoCD — Bootcamp DevOps 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #e4007c; --accent-2: #ff6b35;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #e4007c; --accent-2: #ff6b35;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); }
+
+  .slide { min-height: 100vh; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; padding: 4rem; position: relative; overflow: hidden; }
+  .slide-inner { max-width: 1100px; width: 100%; z-index: 2; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(3rem, 8vw, 6.5rem); }
+  .headline-lg { font-size: clamp(2rem, 5vw, 4rem); }
+  .body-text { font-size: 1.15rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1.5rem; }
+  .slide-num { position: absolute; bottom: 2rem; right: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-dim); }
+  .slide-footer { position: absolute; bottom: 2rem; left: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); }
+
+  .bg-glow { position: absolute; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: absolute; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+  .bg-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+  .slide-cover { text-align: center; }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.8rem; font-style: italic; color: var(--text-muted); margin-top: 1rem; margin-bottom: 3rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 2rem auto; }
+  .cover-meta { display: flex; gap: 2rem; justify-content: center; font-size: 0.9rem; color: var(--text-dim); }
+
+  .slide-list { list-style: none; padding: 0; margin-top: 1rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.1rem; position: relative; border-bottom: 1px solid var(--border); }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; }
+
+  .slide-table { width: 100%; margin: 1.5rem 0; border-collapse: separate; border-spacing: 0 0.4rem; }
+  .slide-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 0.6rem 1.2rem; text-align: left; }
+  .slide-table td { padding: 1rem 1.2rem; background: var(--bg-card); font-size: 1rem; color: var(--text-muted); }
+  .slide-table tr td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; color: var(--text-primary); }
+  .slide-table tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  strong { color: var(--text-primary); }
+
+  .nav-links { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem; }
+  .nav-link { display: flex; flex-direction: column; gap: 0.3rem; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; text-decoration: none; color: var(--text-primary); transition: border-color 0.3s, transform 0.2s; }
+  .nav-link:hover { border-color: var(--accent-1); transform: translateY(-3px); }
+  .nav-prev { text-align: left; }
+  .nav-next { text-align: right; }
+  .nav-arrow { font-size: 1.5rem; color: var(--accent-1); }
+  .nav-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); }
+  .nav-title { font-family: 'Instrument Serif', serif; font-size: 1.4rem; }
+
+  @media print { .slide { page-break-after: always; } .theme-toggle, .logo-fixed { display: none; } html { scroll-snap-type: none; } }
+</style>
+</head>
+<body>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed" style="text-decoration:none;"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+
+<section class="slide slide-cover">
+  <div class="bg-glow" style="width:600px;height:600px;background:#e4007c;top:-200px;right:-100px;"></div><div class="bg-glow" style="width:500px;height:500px;background:#ff6b35;bottom:-200px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="cover-brand">T-Systems &middot; Universidad de Granada &middot; 2026</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">GitOps con ArgoCD</span></h1>
+    <p class="cover-subtitle">Bootcamp DevOps 2026 &mdash; Dia 3 — Bloque 4</p>
+    <div class="cover-line"></div>
+    <div class="cover-meta"><span>Carlos Palanca</span><span>&middot;</span><span>Abril 2026</span></div>
+  </div>
+  <div class="slide-num">01 / 10</div>
+</section>
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">El problema</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">El problema</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <strong>Despliegues manuales</strong>
+
+<ul class="slide-list">
+<li>Cada persona ejecuta `kubectl apply` con sus ficheros locales.</li>
+<li>No hay registro claro de quien cambio que.</li>
+<li>Si algo se rompe, no es facil volver atras.</li>
+<li>Cada miembro del equipo puede tener versiones diferentes.</li>
+</ul>
+
+<p class="body-text">Necesitamos una fuente de verdad unica.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">02 / 10</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Que es GitOps</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Que es GitOps</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <strong>Git = la unica fuente de verdad</strong>
+
+<ul class="slide-list">
+<li>Todo lo que debe estar en el cluster se define en Git.</li>
+<li>Para cambiar el cluster, haces un commit.</li>
+<li>Una herramienta automatica detecta el cambio y actualiza el cluster.</li>
+</ul>
+
+<p class="body-text">No ejecutas comandos contra el cluster: editas Git.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">03 / 10</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Analogia: Google Doc</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Analogia: Google Docs</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <strong>GitOps es como Google Docs</strong>
+
+<ul class="slide-list">
+<li>Alguien edita el documento --> todos ven el cambio al instante.</li>
+<li>No hace falta enviar ficheros por correo ni avisar a nadie.</li>
+<li>El documento compartido es la fuente de verdad.</li>
+</ul>
+
+<p class="body-text">En GitOps:</p>
+<ul class="slide-list">
+<li>Alguien hace commit + push --> el cluster se actualiza automaticamente.</li>
+<li>El repositorio Git es la fuente de verdad.</li>
+</ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">04 / 10</div>
+</section>
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Push vs Pull</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Push vs Pull</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <strong>Dos modelos para aplicar cambios</strong>
+
+<p class="body-text">Modelo Push:</p>
+<ul class="slide-list">
+<li>Una pipeline externa ejecuta `kubectl apply` tras cada commit.</li>
+<li>El sistema "empuja" los cambios al cluster.</li>
+</ul>
+
+<p class="body-text">Modelo Pull:</p>
+<ul class="slide-list">
+<li>Una herramienta dentro del cluster vigila Git.</li>
+<li>Cuando detecta cambios, "tira" de ellos y los aplica.</li>
+<li>Mas seguro: nadie externo necesita credenciales del cluster.</li>
+</ul>
+
+<p class="body-text">ArgoCD usa el modelo Pull.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">05 / 10</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">ArgoCD: arquitectura</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">ArgoCD: arquitectura</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <strong>Como funciona ArgoCD</strong>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">Repositorio Git (manifiestos YAML)
+<p class="body-text">|</p>
+<p class="body-text">|  ArgoCD vigila continuamente</p>
+<p class="body-text">v</p>
+<p class="body-text">ArgoCD (dentro del cluster)</p>
+<p class="body-text">|</p>
+<p class="body-text">|  Compara y sincroniza</p>
+<p class="body-text">v</p>
+<p class="body-text">Cluster Kubernetes (estado real)</pre></div></p>
+
+<p class="body-text">Si Git y el cluster no coinciden, ArgoCD sincroniza el cluster.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">06 / 10</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Interfaz web de Argo</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Interfaz web de ArgoCD</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <strong>ArgoCD UI</strong>
+
+<p class="body-text">[Captura de pantalla: interfaz web de ArgoCD mostrando:]</p>
+<ul class="slide-list">
+<li>Lista de aplicaciones con su estado (Synced/OutOfSync)</li>
+<li>Mapa visual de recursos: Deployment, ReplicaSet, Pods, Service</li>
+<li>Estado de salud de cada recurso (Healthy/Degraded)</li>
+<li>Botones de Sync y Refresh</li>
+</ul>
+
+<p class="body-text">Se accede via navegador en https://localhost:8443</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">07 / 10</div>
+</section>
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Laboratorio</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Laboratorio</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <strong>Lo que vamos a hacer (25 min, en parejas)</strong>
+
+<p class="body-text">1. Instalar ArgoCD en el cluster kind (10 min)</p>
+<p class="body-text">2. Crear una Application que apunte a nuestro repo Git (10 min)</p>
+<p class="body-text">3. Cambiar replicas en Git y ver como ArgoCD sincroniza (5 min)</p>
+
+<p class="body-text">Despues: Showcase (10 min) — cada pareja muestra ArgoCD con su app.</p>
+<div style="margin-top:2rem;text-align:center;"><a href="dia3-bloque4-gitops-argocd-lab.html" style="display:inline-block;padding:1rem 2.5rem;background:linear-gradient(135deg, var(--accent-1), var(--accent-2));color:white;text-decoration:none;border-radius:100px;font-family:'JetBrains Mono',monospace;font-size:0.9rem;letter-spacing:0.05em;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">Abrir laboratorio &rarr;</a></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">08 / 10</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Que hemos conseguido</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Que hemos conseguido hoy</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <strong>El camino del Dia 3</strong>
+
+<p class="body-text">Bloque 1: Kubernetes -- orquestar contenedores</p>
+<p class="body-text">Bloque 2: kubectl apply -- desplegar manualmente</p>
+<p class="body-text">Bloque 3: Helm -- gestionar paquetes con un solo comando</p>
+<p class="body-text">Bloque 4: ArgoCD -- automatizar despliegues con GitOps</p>
+
+<p class="body-text">De contenedores sueltos a despliegues automaticos desde Git.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">09 / 10</div>
+</section>
+<section class="slide">
+  <div class="bg-glow" style="width:700px;height:700px;background:#e4007c;top:50%;left:50%;transform:translate(-50%,-50%);"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Resumen y cierre</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Resumen y cierre</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <strong>Lo que hemos aprendido</strong>
+
+<ul class="slide-list">
+<li>GitOps: Git es la unica fuente de verdad.</li>
+<li>ArgoCD vigila Git y sincroniza el cluster automaticamente.</li>
+<li>No mas `kubectl apply` manual: commit + push y listo.</li>
+</ul>
+
+<p class="body-text">Manana (Dia 4): Infraestructura como Codigo con Terraform y monitorizacion con Prometheus y Grafana.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">10 / 10</div>
+</section>
+<section class="slide">
+  <div class="bg-glow" style="width:600px;height:600px;background:#e4007c;bottom:-200px;left:-100px;"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Navegacion</div>
+    <h2 class="headline headline-lg">Continuar con el <span class="gradient-text">bootcamp</span></h2>
+    <div class="nav-links">
+      <a href="dia3-bloque3-helm.html" class="nav-link nav-prev"><span class="nav-arrow">&larr;</span><span class="nav-label">Anterior</span><span class="nav-title">Helm</span></a>
+      <a href="dia4-bloque1-cloud-terraform.html" class="nav-link nav-next"><span class="nav-label">Siguiente</span><span class="nav-title">Cloud + Terraform</span><span class="nav-arrow">&rarr;</span></a>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+</section>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+document.addEventListener('keydown',e=>{const sl=document.querySelectorAll('.slide');const c=Math.round(window.scrollY/window.innerHeight);if(['ArrowDown',' ','ArrowRight'].includes(e.key)){e.preventDefault();sl[Math.min(c+1,sl.length-1)].scrollIntoView({behavior:'smooth'});}if(['ArrowUp','ArrowLeft'].includes(e.key)){e.preventDefault();sl[Math.max(c-1,0)].scrollIntoView({behavior:'smooth'});}});
+</script>
+
+</body>
+</html>

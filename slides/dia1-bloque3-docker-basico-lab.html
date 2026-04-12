@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratorio Docker Basico — Bootcamp DevOps 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); }
+
+  .slide { min-height: 100vh; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; padding: 4rem; position: relative; overflow: hidden; }
+  .slide-inner { max-width: 1100px; width: 100%; z-index: 2; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(3rem, 8vw, 6.5rem); }
+  .headline-lg { font-size: clamp(2rem, 5vw, 4rem); }
+  .headline-md { font-size: clamp(1.5rem, 3vw, 2.5rem); }
+  .body-text { font-size: 1.15rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1.5rem; }
+  .slide-num { position: absolute; bottom: 2rem; right: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-dim); }
+  .slide-footer { position: absolute; bottom: 2rem; left: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); }
+
+  .bg-glow { position: absolute; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: absolute; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+  .bg-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+  .slide-cover { text-align: center; }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.8rem; font-style: italic; color: var(--text-muted); margin-top: 1rem; margin-bottom: 3rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 2rem auto; }
+  .cover-meta { display: flex; gap: 2rem; justify-content: center; font-size: 0.9rem; color: var(--text-dim); }
+
+  .slide-list { list-style: none; padding: 0; margin-top: 1rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.1rem; position: relative; border-bottom: 1px solid var(--border); }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; }
+
+  .slide-table { width: 100%; margin: 1.5rem 0; border-collapse: separate; border-spacing: 0 0.4rem; }
+  .slide-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 0.6rem 1.2rem; text-align: left; }
+  .slide-table td { padding: 1rem 1.2rem; background: var(--bg-card); font-size: 1rem; color: var(--text-muted); }
+  .slide-table tr td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; color: var(--text-primary); }
+  .slide-table tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  strong { color: var(--text-primary); }
+
+  .alert { background: var(--bg-card); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); border-radius: 14px; padding: 1.5rem; margin: 1.5rem 0; }
+  .alert-title { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-1); margin-bottom: 0.5rem; }
+
+  .troubleshoot { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; margin: 1.5rem 0; }
+  .troubleshoot-title { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: #febc2e; margin-bottom: 1rem; }
+  .troubleshoot-item { padding: 0.8rem 0; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .troubleshoot-item:last-child { border-bottom: none; }
+  .troubleshoot-problem { font-size: 0.9rem; color: var(--text-primary); }
+  .troubleshoot-solution { font-size: 0.9rem; color: var(--text-muted); }
+
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: white; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 600; margin-right: 0.75rem; flex-shrink: 0; }
+
+  .nav-links { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem; }
+  .nav-link { display: flex; flex-direction: column; gap: 0.3rem; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; text-decoration: none; color: var(--text-primary); transition: border-color 0.3s, transform 0.2s; }
+  .nav-link:hover { border-color: var(--accent-1); transform: translateY(-3px); }
+  .nav-prev { text-align: left; }
+  .nav-next { text-align: right; }
+  .nav-arrow { font-size: 1.5rem; color: var(--accent-1); }
+  .nav-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); }
+  .nav-title { font-family: 'Instrument Serif', serif; font-size: 1.4rem; }
+
+  @media print { .slide { page-break-after: always; } .theme-toggle, .logo-fixed { display: none; } html { scroll-snap-type: none; } }
+</style>
+</head>
+<body>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed" style="text-decoration:none;"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+<!-- SLIDE 1: COVER -->
+<section class="slide slide-cover">
+  <div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;top:-200px;right:-100px;"></div><div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-200px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="cover-brand">T-Systems &middot; Universidad de Granada &middot; 2026</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">Laboratorio Docker</span></h1>
+    <p class="cover-subtitle">Bootcamp DevOps 2026 &mdash; Dia 1 — Bloque 3</p>
+    <div class="cover-line"></div>
+    <div class="cover-meta"><span>95 min laboratorio + 15 min showcase</span><span>&middot;</span><span>En parejas</span></div>
+  </div>
+  <div class="slide-num">01 / 24</div>
+</section>
+
+<!-- SLIDE 2: RESUMEN PARTES -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Estructura</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Partes del laboratorio</span></h2>
+    <table class="slide-table">
+      <thead><tr><th>Parte</th><th>Que hareis</th><th>Tiempo</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Servidor web Nginx</td><td>20 min</td></tr>
+        <tr><td>2</td><td>Volumenes con MySQL</td><td>30 min</td></tr>
+        <tr><td>3</td><td>Redes Docker</td><td>25 min</td></tr>
+        <tr><td>4</td><td>App real: Nextcloud + MariaDB</td><td>20 min</td></tr>
+        <tr><td>5</td><td>Showcase (demo a la clase)</td><td>15 min</td></tr>
+      </tbody>
+    </table>
+    <p class="body-text">Uno escribe, el otro revisa. Alternad roles en cada parte.</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">02 / 24</div>
+</section>
+
+<!-- SLIDE 3: ANTES DE EMPEZAR -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Preparacion</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Antes de empezar</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text">Comprobad que teneis todo listo ejecutando estos comandos en la terminal:</p>
+
+      <p class="body-text"><strong>1. Docker Desktop abierto</strong> — icono de la ballena en la barra de tareas</p>
+
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker --version
+# Debeis ver: Docker version 24.0.7 (o superior)</pre></div>
+
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker info
+# Debeis ver informacion del sistema (Server Version, etc.)</pre></div>
+
+      <p class="body-text"><strong>2. Probad que podeis descargar imagenes:</strong></p>
+
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker run --rm hello-world
+# Debeis ver: "Hello from Docker!"</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">03 / 24</div>
+</section>
+
+<!-- SLIDE 4: PARTE 1 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;top:-150px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 1 &middot; 20 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Servidor web Nginx</span></h2>
+    <p class="cover-subtitle">Vuestro primer contenedor con nombre</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">04 / 24</div>
+</section>
+
+<!-- SLIDE 5: PARTE 1 - Paso 1.1 y 1.2 -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 1</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Crear el contenedor Nginx</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">1</span> <strong>Crear el contenedor:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker run -d --name bootcamp-web -p 9999:80 nginx</pre></div>
+
+      <ul class="slide-list">
+        <li><code>-d</code> — ejecuta en segundo plano (detached)</li>
+        <li><code>--name bootcamp-web</code> — nombre concreto en vez de aleatorio</li>
+        <li><code>-p 9999:80</code> — conecta puerto 9999 de tu PC con el 80 del contenedor</li>
+      </ul>
+
+      <p class="body-text" style="margin-top:1rem;">Abrid el navegador: <strong>http://localhost:9999</strong></p>
+      <p class="body-text">Debeis ver la pagina de bienvenida de Nginx.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">05 / 24</div>
+</section>
+
+<!-- SLIDE 6: PARTE 1 - Paso 1.2 y 1.3 -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 1</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Personalizar el contenido</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">2</span> <strong>Preparar contenido web:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">mkdir -p ~/bootcamp-web-content
+code ~/bootcamp-web-content/index.html</pre></div>
+
+      <p class="body-text">Pegad este HTML y guardad con <strong>Ctrl+S</strong>:</p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;&lt;title&gt;Bootcamp DevOps 2026&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Hola desde el Bootcamp DevOps 2026&lt;/h1&gt;
+  &lt;p&gt;Esta pagina se sirve desde un contenedor Docker.&lt;/p&gt;
+  &lt;p&gt;Equipo: [escribid vuestros nombres aqui]&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre></div>
+
+      <p class="body-text"><span class="step-num">3</span> <strong>Copiar al contenedor:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker cp ~/bootcamp-web-content/index.html bootcamp-web:/usr/share/nginx/html/index.html</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">06 / 24</div>
+</section>
+
+<!-- SLIDE 7: PARTE 1 - Verificar y limpieza -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 1</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Verificar y limpiar</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">4</span> <strong>Verificar que los archivos se han copiado:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker exec bootcamp-web ls /usr/share/nginx/html/</pre></div>
+
+      <p class="body-text"><span class="step-num">5</span> <strong>Comprobar en el navegador:</strong> refrescad <strong>http://localhost:9999</strong></p>
+      <p class="body-text">Ahora debeis ver vuestra pagina personalizada.</p>
+
+      <p class="body-text" style="margin-top:1.5rem;"><span class="step-num">6</span> <strong>Limpieza:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker stop bootcamp-web
+docker rm bootcamp-web
+docker ps -a    # Comprobad que se ha eliminado</pre></div>
+
+      <div class="troubleshoot">
+        <div class="troubleshoot-title">Si algo falla</div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">"port already in use"</div><div class="troubleshoot-solution">Cambiad a <code>-p 8888:80</code> y visitad <code>:8888</code></div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">"No such container"</div><div class="troubleshoot-solution">Comprobad con <code>docker ps -a</code></div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">La pagina no carga</div><div class="troubleshoot-solution">Esperad 5s y refrescad. Comprobad <code>docker ps</code></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">07 / 24</div>
+</section>
+
+<!-- SLIDE 8: PARTE 2 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-150px;right:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 2 &middot; 30 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Volumenes con MySQL</span></h2>
+    <p class="cover-subtitle">Datos que sobreviven a la destruccion del contenedor</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">08 / 24</div>
+</section>
+
+<!-- SLIDE 9: PARTE 2 - Crear volumen y arrancar MySQL -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 2</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Crear volumen y arrancar MySQL</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">1</span> <strong>Crear un volumen:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker volume create datasql
+docker volume ls</pre></div>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Arrancar MySQL con el volumen:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker run -d \
+  --name mi-mysql \
+  -v datasql:/var/lib/mysql \
+  -e MYSQL_ROOT_PASSWORD=bootcamp2026 \
+  -p 3306:3306 \
+  mysql:8.1</pre></div>
+
+      <ul class="slide-list">
+        <li><code>-v datasql:/var/lib/mysql</code> — monta el volumen donde MySQL guarda datos</li>
+        <li><code>-e MYSQL_ROOT_PASSWORD=bootcamp2026</code> — contrasena de root</li>
+        <li><code>-p 3306:3306</code> — expone el puerto de MySQL</li>
+      </ul>
+
+      <p class="body-text" style="margin-top:1rem;">Esperad unos segundos y comprobad: <code>docker logs mi-mysql</code></p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">09 / 24</div>
+</section>
+
+<!-- SLIDE 10: PARTE 2 - Crear datos de prueba -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 2</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Crear datos de prueba</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">3</span> <strong>Conectaos a MySQL:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker exec -it mi-mysql mysql -uroot -pbootcamp2026</pre></div>
+
+      <p class="body-text"><span class="step-num">4</span> <strong>Dentro de la consola MySQL, ejecutad:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">CREATE DATABASE bootcamp;
+USE bootcamp;
+CREATE TABLE alumnos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(100)
+);
+INSERT INTO alumnos (nombre) VALUES ('Equipo 1'), ('Equipo 2');
+SELECT * FROM alumnos;
+EXIT;</pre></div>
+
+      <p class="body-text">Debeis ver la tabla con los dos registros.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">10 / 24</div>
+</section>
+
+<!-- SLIDE 11: PARTE 2 - Demostrar persistencia -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 2</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Los datos persisten</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">5</span> <strong>Eliminad el contenedor completamente:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker stop mi-mysql
+docker rm mi-mysql
+docker volume ls    # El volumen sigue ahi!</pre></div>
+
+      <p class="body-text"><span class="step-num">6</span> <strong>Cread un contenedor nuevo con el mismo volumen:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker run -d \
+  --name mi-mysql-2 \
+  -v datasql:/var/lib/mysql \
+  -e MYSQL_ROOT_PASSWORD=bootcamp2026 \
+  -p 3306:3306 \
+  mysql:8.1</pre></div>
+
+      <p class="body-text"><span class="step-num">7</span> <strong>Comprobad que los datos siguen ahi:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker exec -it mi-mysql-2 mysql -uroot -pbootcamp2026 \
+  -e "SELECT * FROM bootcamp.alumnos;"</pre></div>
+
+      <div class="alert">
+        <div class="alert-title">Clave</div>
+        <p class="body-text">Los datos han sobrevivido a la destruccion del contenedor. Esto es fundamental para bases de datos en produccion.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">11 / 24</div>
+</section>
+
+<!-- SLIDE 12: PARTE 2 - Backup y restore -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 2</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Backup y restore</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><strong>Crear un backup del volumen:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker run --rm \
+  -v datasql:/source \
+  -v $(pwd):/backup \
+  busybox tar czf /backup/mysql-backup.tar.gz -C /source .
+
+ls -lh mysql-backup.tar.gz</pre></div>
+
+      <p class="body-text"><strong>Restaurar en un volumen nuevo:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker volume create datasql_restaurado
+
+docker run --rm \
+  -v datasql_restaurado:/target \
+  -v $(pwd):/backup \
+  busybox tar xzf /backup/mysql-backup.tar.gz -C /target</pre></div>
+
+      <p class="body-text"><strong>Verificar la restauracion:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker run -d --name mi-mysql-3 \
+  -v datasql_restaurado:/var/lib/mysql \
+  -e MYSQL_ROOT_PASSWORD=bootcamp2026 -p 3307:3306 mysql:8.1
+
+# Esperad unos segundos y comprobad:
+docker exec -it mi-mysql-3 mysql -uroot -pbootcamp2026 \
+  -e "SELECT * FROM bootcamp.alumnos;"</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">12 / 24</div>
+</section>
+
+<!-- SLIDE 13: PARTE 2 - Limpieza y troubleshoot -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 2</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Limpieza Parte 2</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker stop mi-mysql-2 mi-mysql-3
+docker rm mi-mysql-2 mi-mysql-3
+docker volume rm datasql datasql_restaurado
+rm mysql-backup.tar.gz</pre></div>
+
+      <div class="troubleshoot">
+        <div class="troubleshoot-title">Si algo falla</div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">MySQL tarda mucho en arrancar</div><div class="troubleshoot-solution">Normal la primera vez. Esperad 30-60s y mirad <code>docker logs mi-mysql</code></div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">"Access denied for user"</div><div class="troubleshoot-solution">Eliminad contenedor y volumen: <code>docker rm -f mi-mysql && docker volume rm datasql</code></div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Puerto 3306 en uso</div><div class="troubleshoot-solution">Usad <code>-p 3307:3306</code> y conectaos con <code>-P 3307</code></div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem"><code>$(pwd)</code> no funciona</div><div class="troubleshoot-solution">Aseguraos de estar en terminal Ubuntu (WSL2), no PowerShell</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">13 / 24</div>
+</section>
+
+<!-- SLIDE 14: PARTE 3 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;top:-150px;right:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 3 &middot; 25 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Redes Docker</span></h2>
+    <p class="cover-subtitle">Los contenedores se comunican entre si</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">14 / 24</div>
+</section>
+
+<!-- SLIDE 15: PARTE 3 - Red y contenedores -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 3</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Crear red y contenedores</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">1</span> <strong>Crear red y volumen:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker network create red_bootcamp
+docker volume create redis_data
+docker network ls</pre></div>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Arrancar Redis en la red:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker run -d \
+  --name redis \
+  --network red_bootcamp \
+  -v redis_data:/data \
+  redis</pre></div>
+
+      <p class="body-text"><span class="step-num">3</span> <strong>Arrancar dos servidores web Apache:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker run -d --name web1 --network red_bootcamp -p 8081:80 httpd:2.4
+docker run -d --name web2 --network red_bootcamp -p 8082:80 httpd:2.4
+docker ps</pre></div>
+
+      <p class="body-text">Visitad <strong>http://localhost:8081</strong> y <strong>http://localhost:8082</strong></p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">15 / 24</div>
+</section>
+
+<!-- SLIDE 16: PARTE 3 - DNS entre contenedores -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 3</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Resolucion DNS</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">4</span> <strong>Lanzad un contenedor para probar la red:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker run -it --rm --network red_bootcamp busybox</pre></div>
+
+      <p class="body-text">Dentro del contenedor, haced ping por nombre:</p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">ping -c 3 redis
+ping -c 3 web1
+ping -c 3 web2
+exit</pre></div>
+
+      <div class="alert">
+        <div class="alert-title">Clave</div>
+        <p class="body-text">Docker resuelve los nombres automaticamente dentro de la misma red. No necesitais hardcodear IPs.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">16 / 24</div>
+</section>
+
+<!-- SLIDE 17: PARTE 3 - Comunicacion Redis -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 3</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Comunicacion entre servicios</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">5</span> <strong>Conectaos a Redis por nombre DNS:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker run -it --rm --network red_bootcamp redis redis-cli -h redis</pre></div>
+
+      <p class="body-text">Dentro del cliente Redis:</p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">SET bootcamp "DevOps 2026"
+GET bootcamp
+SET equipo "Nuestro equipo"
+GET equipo
+KEYS *
+exit</pre></div>
+
+      <p class="body-text">El cliente Redis no necesita saber la IP del servidor. Solo usa el nombre del contenedor.</p>
+
+      <p class="body-text" style="margin-top:1.5rem;"><span class="step-num">6</span> <strong>Limpieza:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker stop redis web1 web2
+docker rm redis web1 web2
+docker network rm red_bootcamp
+docker volume rm redis_data</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">17 / 24</div>
+</section>
+
+<!-- SLIDE 18: PARTE 4 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:600px;height:600px;background:#00d4aa;top:-200px;left:-100px;"></div><div class="bg-glow" style="width:400px;height:400px;background:#00a3e0;bottom:-150px;right:-50px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 4 &middot; 20 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Nextcloud + MariaDB</span></h2>
+    <p class="cover-subtitle">Aplicacion real con volumenes, redes y variables de entorno</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">18 / 24</div>
+</section>
+
+<!-- SLIDE 19: PARTE 4 - Infraestructura y MariaDB -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 4</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Crear infraestructura</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">1</span> <strong>Crear red y volumenes:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker network create red_cloud
+docker volume create nextcloud_data
+docker volume create mariadb_data</pre></div>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Desplegar MariaDB:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker run -d \
+  --name mariadb \
+  --network red_cloud \
+  -v mariadb_data:/var/lib/mysql \
+  -e MYSQL_ROOT_PASSWORD=secret \
+  -e MYSQL_DATABASE=nextdb \
+  -e MYSQL_USER=next_user \
+  -e MYSQL_PASSWORD=next_secret \
+  mariadb</pre></div>
+
+      <ul class="slide-list">
+        <li><code>MYSQL_DATABASE=nextdb</code> — crea la BD automaticamente al arrancar</li>
+        <li><code>MYSQL_USER</code> / <code>MYSQL_PASSWORD</code> — crea un usuario con acceso</li>
+      </ul>
+
+      <p class="body-text" style="margin-top:1rem;">Comprobad: <code>docker logs mariadb</code></p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">19 / 24</div>
+</section>
+
+<!-- SLIDE 20: PARTE 4 - Desplegar Nextcloud -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 4</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Desplegar Nextcloud</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">3</span> <strong>Desplegar Nextcloud:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker run -d \
+  --name nextcloud \
+  --network red_cloud \
+  -v nextcloud_data:/var/www/html \
+  -e MYSQL_HOST=mariadb \
+  -e MYSQL_DATABASE=nextdb \
+  -e MYSQL_USER=next_user \
+  -e MYSQL_PASSWORD=next_secret \
+  -p 8080:80 \
+  nextcloud</pre></div>
+
+      <div class="alert">
+        <div class="alert-title">Fijaos</div>
+        <p class="body-text"><code>MYSQL_HOST=mariadb</code> — Nextcloud se conecta a MariaDB usando el nombre del contenedor como hostname. Funciona porque estan en la misma red Docker.</p>
+      </div>
+
+      <p class="body-text"><span class="step-num">4</span> <strong>Verificar:</strong> esperad 15-20 segundos y abrid <strong>http://localhost:8080</strong></p>
+      <p class="body-text">Cread una cuenta de administrador con cualquier usuario y contrasena.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">20 / 24</div>
+</section>
+
+<!-- SLIDE 21: PARTE 4 - Explorar -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 4</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Explorar y personalizar</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">5</span> <strong>Investigad por vuestra cuenta:</strong></p>
+
+      <ul class="slide-list">
+        <li><strong>Subid un archivo</strong> a Nextcloud desde el navegador</li>
+        <li><strong>Comprobad los logs:</strong> <code>docker logs nextcloud</code> y <code>docker logs mariadb</code></li>
+        <li><strong>Inspeccionad la red:</strong> <code>docker network inspect red_cloud</code></li>
+        <li><strong>Comprobad los volumenes:</strong> <code>docker volume inspect nextcloud_data</code></li>
+      </ul>
+
+      <div class="alert">
+        <div class="alert-title">Reflexion</div>
+        <p class="body-text">Dos servicios en contenedores separados, comunicandose por DNS, con datos persistentes en volumenes. Todo levantado con comandos simples, sin instalar nada en vuestro SO.</p>
+      </div>
+
+      <p class="body-text" style="margin-top:1rem;"><strong>Dejad Nextcloud corriendo para el showcase.</strong></p>
+
+      <div class="troubleshoot">
+        <div class="troubleshoot-title">Si algo falla</div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Pagina en blanco</div><div class="troubleshoot-solution">Esperad 30s y refrescad. Comprobad <code>docker logs nextcloud</code></div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Error de base de datos</div><div class="troubleshoot-solution">MariaDB no ha arrancado. Esperad y reiniciad: <code>docker restart nextcloud</code></div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Puerto 8080 en uso</div><div class="troubleshoot-solution">Cambiad a <code>-p 8888:80</code> y visitad <code>:8888</code></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">21 / 24</div>
+</section>
+
+<!-- SLIDE 22: PARTE 5 - SHOWCASE -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;bottom:-150px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 5 &middot; 15 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Showcase</span></h2>
+    <p class="cover-subtitle">Demostrad vuestro trabajo al resto de la clase</p>
+    <div style="margin-top:3rem; text-align:left; max-width:700px; margin-left:auto; margin-right:auto;">
+      <p class="body-text">Cada pareja tiene <strong>2-3 minutos</strong> para mostrar:</p>
+      <ul class="slide-list">
+        <li><code>docker ps</code> — enseniad los contenedores corriendo</li>
+        <li><strong>Navegador</strong> — abrid http://localhost:8080 y enseniad Nextcloud</li>
+        <li><strong>Explicacion breve</strong> — algo que hayais aprendido o un problema resuelto</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">22 / 24</div>
+</section>
+
+<!-- SLIDE 23: LIMPIEZA FINAL -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Limpieza final</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Limpieza final</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text">Cuando termineis el showcase:</p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">docker stop nextcloud mariadb
+docker rm nextcloud mariadb
+docker network rm red_cloud
+docker volume rm nextcloud_data mariadb_data</pre></div>
+
+      <div class="alert">
+        <div class="alert-title">Resumen de lo que habeis conseguido</div>
+        <p class="body-text">1. Contenedor Nginx con nombre y contenido web personalizado</p>
+        <p class="body-text">2. Volumenes para que los datos de MySQL sobrevivan al contenedor</p>
+        <p class="body-text">3. Redes Docker y resolucion DNS entre contenedores</p>
+        <p class="body-text">4. Aplicacion real (Nextcloud + MariaDB) con volumenes, redes y env vars</p>
+      </div>
+
+      <p class="body-text" style="margin-top:1.5rem;">Estos son los fundamentos que necesitais para el siguiente bloque, donde dockerizareis vuestra propia aplicacion.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">23 / 24</div>
+</section>
+
+<!-- SLIDE 24: NAVEGACION -->
+<section class="slide">
+  <div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;bottom:-200px;left:-100px;"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Navegacion</div>
+    <h2 class="headline headline-lg">Volver a las <span class="gradient-text">slides</span></h2>
+    <div class="nav-links">
+      <a href="dia1-bloque3-docker-basico.html" class="nav-link nav-prev"><span class="nav-arrow">&larr;</span><span class="nav-label">Slides</span><span class="nav-title">Docker Basico</span></a>
+      <a href="dia2-bloque1-cicd-fundamentos.html" class="nav-link nav-next"><span class="nav-label">Siguiente</span><span class="nav-title">CI/CD Fundamentos</span><span class="nav-arrow">&rarr;</span></a>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+</section>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+document.addEventListener('keydown',e=>{const sl=document.querySelectorAll('.slide');const c=Math.round(window.scrollY/window.innerHeight);if(['ArrowDown',' ','ArrowRight'].includes(e.key)){e.preventDefault();sl[Math.min(c+1,sl.length-1)].scrollIntoView({behavior:'smooth'});}if(['ArrowUp','ArrowLeft'].includes(e.key)){e.preventDefault();sl[Math.max(c-1,0)].scrollIntoView({behavior:'smooth'});}});
+</script>
+
+</body>
+</html>

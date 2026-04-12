@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cultura DevOps — Bootcamp DevOps 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f;
+    --bg-card: #12121a;
+    --bg-surface: #1a1a26;
+    --accent-magenta: #e4007c;
+    --accent-blue: #00a3e0;
+    --accent-cyan: #00d4aa;
+    --accent-orange: #ff6b35;
+    --text-primary: #f0eff4;
+    --text-muted: #8a8a9a;
+    --text-dim: #55556a;
+    --gradient-main: linear-gradient(135deg, #e4007c 0%, #00a3e0 100%);
+    --gradient-warm: linear-gradient(135deg, #ff6b35 0%, #e4007c 100%);
+    --gradient-cool: linear-gradient(135deg, #00a3e0 0%, #00d4aa 100%);
+    --border: rgba(255,255,255,0.06);
+    --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9;
+    --bg-card: #ffffff;
+    --bg-surface: #f0efeb;
+    --accent-magenta: #c8006a;
+    --accent-blue: #0080b8;
+    --accent-cyan: #00a888;
+    --accent-orange: #e05a2b;
+    --text-primary: #1a1a1a;
+    --text-muted: #5a5a6a;
+    --text-dim: #9a9aaa;
+    --gradient-main: linear-gradient(135deg, #c8006a 0%, #0080b8 100%);
+    --gradient-warm: linear-gradient(135deg, #e05a2b 0%, #c8006a 100%);
+    --gradient-cool: linear-gradient(135deg, #0080b8 0%, #00a888 100%);
+    --border: rgba(0,0,0,0.08);
+    --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  .theme-toggle {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 999;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 0.5rem;
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .theme-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+  }
+
+  .theme-btn.active {
+    background: var(--accent-magenta);
+    color: white;
+  }
+
+  .logo-fixed {
+    position: fixed;
+    top: 1.8rem;
+    left: 2rem;
+    z-index: 999;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+  }
+  .logo-fixed strong { font-weight: 700; color: var(--accent-magenta); }
+
+  .slide {
+    min-height: 100vh;
+    scroll-snap-align: start;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .slide-inner {
+    max-width: 1100px;
+    width: 100%;
+    z-index: 2;
+  }
+
+  /* Typography */
+  .headline {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+
+  .headline-xl { font-size: clamp(3rem, 8vw, 7rem); }
+  .headline-lg { font-size: clamp(2.5rem, 6vw, 5rem); }
+  .headline-md { font-size: clamp(2rem, 4vw, 3.5rem); }
+
+  .body-text {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.25rem;
+    line-height: 1.7;
+    color: var(--text-muted);
+  }
+
+  .mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+  }
+
+  .gradient-text {
+    background: var(--gradient-main);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent-magenta);
+    border: 1px solid rgba(228, 0, 124, 0.3);
+    padding: 0.4rem 1rem;
+    border-radius: 100px;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Slide counter */
+  .slide-num {
+    position: absolute;
+    bottom: 2rem;
+    right: 3rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+  }
+
+  /* Background effects */
+  .bg-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.15;
+    pointer-events: none;
+  }
+
+  .bg-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  .bg-noise {
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+
+  /* ============== SLIDE 1: PORTADA ============== */
+  .slide-cover {
+    background: var(--bg-deep);
+    text-align: center;
+  }
+
+  .cover-brand {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 3rem;
+  }
+
+  .cover-title {
+    margin-bottom: 1.5rem;
+  }
+
+  .cover-subtitle {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.8rem;
+    font-style: italic;
+    color: var(--text-muted);
+    margin-bottom: 3rem;
+  }
+
+  .cover-meta {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+  }
+
+  .cover-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .cover-line {
+    width: 120px;
+    height: 2px;
+    background: var(--gradient-main);
+    margin: 2rem auto;
+  }
+
+  /* ============== SLIDE 2: ANALOGIA ============== */
+  .analogy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin-top: 3rem;
+  }
+
+  .analogy-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 20px;
+    padding: 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .analogy-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+  }
+
+  .analogy-card.bad::before { background: var(--gradient-warm); }
+  .analogy-card.good::before { background: var(--gradient-cool); }
+
+  .analogy-icon {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+    display: block;
+  }
+
+  .analogy-card h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  .analogy-card ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .analogy-card li {
+    padding: 0.4rem 0;
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    padding-left: 1.2rem;
+    position: relative;
+  }
+
+  .analogy-card.bad li::before { content: ''; position: absolute; left: 0; top: 0.75rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-orange); }
+  .analogy-card.good li::before { content: ''; position: absolute; left: 0; top: 0.75rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-cyan); }
+
+  /* ============== SLIDE 3: PROBLEMA ============== */
+  .terminal {
+    background: #0d0d14;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-top: 2.5rem;
+  }
+
+  .terminal-bar {
+    background: rgba(255,255,255,0.04);
+    padding: 0.8rem 1.2rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .terminal-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+
+  .terminal-body {
+    padding: 2rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1rem;
+    line-height: 2;
+  }
+
+  .t-dev { color: var(--accent-blue); }
+  .t-ops { color: var(--accent-orange); }
+  .t-arrow { color: var(--text-dim); }
+  .t-msg { color: var(--text-muted); }
+
+  /* ============== SLIDE 4-5: CAMS ============== */
+  .cams-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+
+  .cams-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 20px;
+    padding: 2.5rem;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+  }
+
+  .cams-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255,255,255,0.12);
+  }
+
+  .cams-letter {
+    font-family: 'Instrument Serif', serif;
+    font-size: 4rem;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .cams-card:nth-child(1) .cams-letter { color: var(--accent-magenta); }
+  .cams-card:nth-child(2) .cams-letter { color: var(--accent-blue); }
+  .cams-card:nth-child(3) .cams-letter { color: var(--accent-cyan); }
+  .cams-card:nth-child(4) .cams-letter { color: var(--accent-orange); }
+
+  .cams-title {
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+
+  .cams-desc {
+    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  /* ============== SLIDE 6: DORA ============== */
+  .dora-table {
+    width: 100%;
+    margin-top: 2.5rem;
+    border-collapse: separate;
+    border-spacing: 0 0.5rem;
+  }
+
+  .dora-table th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 0.8rem 1.5rem;
+    text-align: left;
+  }
+
+  .dora-table td {
+    padding: 1.2rem 1.5rem;
+    background: var(--bg-card);
+    font-size: 1.05rem;
+  }
+
+  .dora-table tr td:first-child {
+    border-radius: 12px 0 0 12px;
+    font-weight: 600;
+  }
+
+  .dora-table tr td:last-child {
+    border-radius: 0 12px 12px 0;
+  }
+
+  .good-val { color: var(--accent-cyan); }
+  .bad-val { color: var(--accent-orange); }
+
+  /* ============== SLIDE 7: CICLO ============== */
+  .cycle-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 3rem;
+  }
+
+  .cycle-ring {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .cycle-item {
+    text-align: center;
+    padding: 2rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    position: relative;
+    transition: transform 0.2s;
+  }
+
+  .cycle-item:hover { transform: scale(1.05); }
+
+  .cycle-item .cycle-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-bottom: 0.5rem;
+  }
+
+  .cycle-item .cycle-icon { font-size: 2rem; margin-bottom: 0.8rem; display: block; }
+
+  .cycle-item .cycle-name {
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .cycle-item .cycle-label {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+  }
+
+  .cycle-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1rem; }
+
+  .cycle-divider {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent-magenta);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    position: relative;
+  }
+
+  .cycle-divider::before,
+  .cycle-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 30%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(228,0,124,0.3), transparent);
+  }
+
+  .cycle-divider::before { left: 0; }
+  .cycle-divider::after { right: 0; }
+
+  /* ============== SLIDE 8: HERRAMIENTAS ============== */
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-top: 2.5rem;
+  }
+
+  .tool-cell {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: border-color 0.3s;
+  }
+
+  .tool-cell:hover { border-color: rgba(228,0,124,0.3); }
+
+  .tool-phase {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 0.8rem;
+  }
+
+  .tool-name {
+    font-weight: 600;
+    font-size: 1.05rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .tool-alt {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+
+  .tool-highlight {
+    border-color: rgba(228,0,124,0.4);
+    background: rgba(228,0,124,0.05);
+  }
+
+  /* ============== SLIDE 9: ACTIVIDAD ============== */
+  .activity-card {
+    background: var(--bg-card);
+    border: 2px solid rgba(228,0,124,0.2);
+    border-radius: 24px;
+    padding: 3.5rem;
+    margin-top: 3rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .activity-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(228,0,124,0.06), transparent 70%);
+    pointer-events: none;
+  }
+
+  .activity-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 2.5rem;
+    text-align: left;
+  }
+
+  .activity-step {
+    position: relative;
+    padding-left: 0;
+  }
+
+  .step-num {
+    font-family: 'Instrument Serif', serif;
+    font-size: 3rem;
+    color: var(--accent-magenta);
+    opacity: 0.6;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .step-text {
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* ============== SLIDE 10: RESUMEN ============== */
+  .recap-list {
+    list-style: none;
+    margin-top: 2.5rem;
+    padding: 0;
+  }
+
+  .recap-list li {
+    padding: 1.2rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    align-items: flex-start;
+    gap: 1.2rem;
+    font-size: 1.15rem;
+    color: var(--text-muted);
+  }
+
+  .recap-bullet {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gradient-main);
+    flex-shrink: 0;
+    margin-top: 0.5rem;
+  }
+
+  .next-block {
+    margin-top: 3rem;
+    padding: 2rem;
+    background: var(--bg-card);
+    border-radius: 16px;
+    border-left: 3px solid var(--accent-magenta);
+  }
+
+  .next-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent-magenta);
+    margin-bottom: 0.5rem;
+  }
+
+  .next-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.6rem;
+    color: var(--text-primary);
+  }
+
+  /* Footer */
+  .slide-footer {
+    position: absolute;
+    bottom: 2rem;
+    left: 3rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  .nav-links { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem; }
+  .nav-link { display: flex; flex-direction: column; gap: 0.3rem; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border, rgba(255,255,255,0.06)); border-radius: 16px; text-decoration: none; color: var(--text-primary); transition: border-color 0.3s, transform 0.2s; }
+  .nav-link:hover { border-color: var(--accent-magenta); transform: translateY(-3px); }
+  .nav-prev { text-align: left; }
+  .nav-next { text-align: right; }
+  .nav-arrow { font-size: 1.5rem; color: var(--accent-magenta); }
+  .nav-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); }
+  .nav-title { font-family: 'Instrument Serif', serif; font-size: 1.4rem; }
+
+  /* Print / Export */
+  @media print {
+    .slide { page-break-after: always; min-height: 100vh; }
+    html { scroll-snap-type: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Theme Toggle -->
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+
+<!-- Logo -->
+<a href="index.html" class="logo-fixed" style="text-decoration:none;"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+<!-- SLIDE 1: PORTADA -->
+<section class="slide slide-cover">
+  <div class="bg-glow" style="width:600px;height:600px;background:var(--accent-magenta);top:-200px;right:-100px;"></div>
+  <div class="bg-glow" style="width:500px;height:500px;background:var(--accent-blue);bottom:-200px;left:-100px;"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="cover-brand">T-Systems &middot; Universidad de Granada &middot; 2026</div>
+    <h1 class="headline headline-xl cover-title">
+      <span class="gradient-text">Cultura DevOps</span>
+    </h1>
+    <p class="cover-subtitle">Bootcamp DevOps 2026 &mdash; Dia 1, Bloque 1</p>
+    <div class="cover-line"></div>
+    <div class="cover-meta">
+      <span>Carlos Palanca</span>
+      <span>&middot;</span>
+      <span>13 Abril 2026</span>
+      <span>&middot;</span>
+      <span>30 minutos</span>
+    </div>
+  </div>
+  <div class="slide-num">01 / 10</div>
+</section>
+
+<!-- SLIDE 2: ANALOGIA -->
+<section class="slide">
+  <div class="bg-grid"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Concepto</div>
+    <h2 class="headline headline-lg">Que es <em class="gradient-text">DevOps</em></h2>
+    <div class="analogy-grid">
+      <div class="analogy-card bad">
+        <span class="analogy-icon">Sin DevOps</span>
+        <h3>Edificios separados</h3>
+        <ul>
+          <li>Disenadores y constructores no se hablan</li>
+          <li>Los planos llegan tarde y sin contexto</li>
+          <li>Errores, retrasos, frustracion</li>
+          <li>"No es mi problema"</li>
+        </ul>
+      </div>
+      <div class="analogy-card good">
+        <span class="analogy-icon">Con DevOps</span>
+        <h3>Misma mesa, mismo objetivo</h3>
+        <ul>
+          <li>Dev + Ops trabajan juntos desde el inicio</li>
+          <li>Comunicacion constante y directa</li>
+          <li>Responsabilidad compartida</li>
+          <li>"Lo resolvemos juntos"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">Bootcamp DevOps 2026 &mdash; Carlos Palanca</div>
+  <div class="slide-num">02 / 10</div>
+</section>
+
+<!-- SLIDE 3: PROBLEMA -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">El problema</div>
+    <h2 class="headline headline-lg">"Funciona en <em class="gradient-text">mi maquina</em>"</h2>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span>
+        <span class="terminal-dot"></span>
+        <span class="terminal-dot"></span>
+      </div>
+      <div class="terminal-body">
+        <span class="t-dev">DESARROLLO</span> <span class="t-arrow">&rarr;</span> <span class="t-msg">Escribe codigo, prueba en su PC, "funciona perfecto"</span><br>
+        <span class="t-dev">DESARROLLO</span> <span class="t-arrow">&rarr;</span> <span class="t-msg">Envia el paquete a Operaciones</span><br>
+        <span class="t-ops">OPERACIONES</span> <span class="t-arrow">&rarr;</span> <span class="t-msg">"Esto no arranca. Que version de Python usa?"</span><br>
+        <span class="t-dev">DESARROLLO</span> <span class="t-arrow">&rarr;</span> <span class="t-msg">"No se, funciona en mi maquina"</span><br>
+        <span class="t-ops">OPERACIONES</span> <span class="t-arrow">&rarr;</span> <span class="t-msg">"Nadie me aviso de este cambio"</span><br>
+        <br>
+        <span class="t-arrow">// Resultado: despliegue fallido, clientes afectados, culpas cruzadas</span>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">Bootcamp DevOps 2026 &mdash; Carlos Palanca</div>
+  <div class="slide-num">03 / 10</div>
+</section>
+
+<!-- SLIDE 4-5: CAMS -->
+<section class="slide">
+  <div class="bg-grid"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Framework</div>
+    <h2 class="headline headline-lg">Los 4 pilares: <em class="gradient-text">CAMS</em></h2>
+    <div class="cams-grid">
+      <div class="cams-card">
+        <div class="cams-letter">C</div>
+        <div class="cams-title">Cultura</div>
+        <div class="cams-desc">Colaboracion real entre Dev y Ops. Responsabilidad compartida. Confianza en lugar de culpa.</div>
+      </div>
+      <div class="cams-card">
+        <div class="cams-letter">A</div>
+        <div class="cams-title">Automatizacion</div>
+        <div class="cams-desc">Tests automaticos. Despliegues con un boton. Infraestructura como codigo.</div>
+      </div>
+      <div class="cams-card">
+        <div class="cams-letter">M</div>
+        <div class="cams-title">Medicion</div>
+        <div class="cams-desc">Medir tiempos y fallos. Dashboards visibles. Decisiones basadas en datos.</div>
+      </div>
+      <div class="cams-card">
+        <div class="cams-letter">S</div>
+        <div class="cams-title">Compartir</div>
+        <div class="cams-desc">Documentacion abierta. Post-mortems sin culpa. El conocimiento es del equipo.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">Bootcamp DevOps 2026 &mdash; Carlos Palanca</div>
+  <div class="slide-num">04 / 10</div>
+</section>
+
+<!-- SLIDE 6: DORA -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Metricas</div>
+    <h2 class="headline headline-lg">Metricas <em class="gradient-text">DORA</em></h2>
+    <p class="body-text" style="margin-top:0.5rem;">Las 4 metricas que miden el rendimiento de un equipo DevOps</p>
+    <table class="dora-table">
+      <thead>
+        <tr>
+          <th>Metrica</th>
+          <th>Elite</th>
+          <th>Bajo rendimiento</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Frecuencia de despliegue</td>
+          <td class="good-val">Varias veces al dia</td>
+          <td class="bad-val">1 vez al mes</td>
+        </tr>
+        <tr>
+          <td>Tiempo de entrega</td>
+          <td class="good-val">Menos de 1 dia</td>
+          <td class="bad-val">Mas de 1 mes</td>
+        </tr>
+        <tr>
+          <td>Tasa de fallos</td>
+          <td class="good-val">Menos del 15%</td>
+          <td class="bad-val">Mas del 45%</td>
+        </tr>
+        <tr>
+          <td>Tiempo de recuperacion</td>
+          <td class="good-val">Menos de 1 hora</td>
+          <td class="bad-val">Mas de 1 semana</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="slide-footer">Bootcamp DevOps 2026 &mdash; Carlos Palanca</div>
+  <div class="slide-num">05 / 10</div>
+</section>
+
+<!-- SLIDE 7: CICLO DE VIDA -->
+<section class="slide">
+  <div class="bg-grid"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Proceso</div>
+    <h2 class="headline headline-lg">Ciclo de vida <em class="gradient-text">DevOps</em></h2>
+    <div style="margin-top:2.5rem;">
+      <div class="cycle-row">
+        <div class="cycle-item"><div class="cycle-num">01</div><div class="cycle-icon">Plan</div><div class="cycle-name">Planificar</div><div class="cycle-label">Requisitos</div></div>
+        <div class="cycle-item"><div class="cycle-num">02</div><div class="cycle-icon">Code</div><div class="cycle-name">Codificar</div><div class="cycle-label">Escribir codigo</div></div>
+        <div class="cycle-item"><div class="cycle-num">03</div><div class="cycle-icon">Build</div><div class="cycle-name">Construir</div><div class="cycle-label">Compilar / empaquetar</div></div>
+        <div class="cycle-item"><div class="cycle-num">04</div><div class="cycle-icon">Test</div><div class="cycle-name">Probar</div><div class="cycle-label">Tests automaticos</div></div>
+      </div>
+      <div class="cycle-divider">Integracion y Entrega Continua</div>
+      <div class="cycle-row">
+        <div class="cycle-item"><div class="cycle-num">05</div><div class="cycle-icon">Release</div><div class="cycle-name">Publicar</div><div class="cycle-label">Versionar</div></div>
+        <div class="cycle-item"><div class="cycle-num">06</div><div class="cycle-icon">Deploy</div><div class="cycle-name">Desplegar</div><div class="cycle-label">A produccion</div></div>
+        <div class="cycle-item"><div class="cycle-num">07</div><div class="cycle-icon">Operate</div><div class="cycle-name">Operar</div><div class="cycle-label">Gestionar infra</div></div>
+        <div class="cycle-item"><div class="cycle-num">08</div><div class="cycle-icon">Monitor</div><div class="cycle-name">Monitorizar</div><div class="cycle-label">Metricas y alertas</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">Bootcamp DevOps 2026 &mdash; Carlos Palanca</div>
+  <div class="slide-num">06 / 10</div>
+</section>
+
+<!-- SLIDE 8: HERRAMIENTAS -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Ecosistema</div>
+    <h2 class="headline headline-lg">Herramientas <em class="gradient-text">DevOps</em></h2>
+    <div class="tools-grid">
+      <div class="tool-cell"><div class="tool-phase">Plan</div><div class="tool-name">Jira</div><div class="tool-alt">Trello, Linear</div></div>
+      <div class="tool-cell tool-highlight"><div class="tool-phase">Code</div><div class="tool-name">Git + GitHub</div><div class="tool-alt">GitLab, Bitbucket</div></div>
+      <div class="tool-cell tool-highlight"><div class="tool-phase">Build</div><div class="tool-name">Docker</div><div class="tool-alt">Podman, Buildah</div></div>
+      <div class="tool-cell"><div class="tool-phase">Test</div><div class="tool-name">Jest</div><div class="tool-alt">Selenium, JUnit</div></div>
+      <div class="tool-cell tool-highlight"><div class="tool-phase">Release</div><div class="tool-name">GitHub Actions</div><div class="tool-alt">Jenkins, GitLab CI</div></div>
+      <div class="tool-cell tool-highlight"><div class="tool-phase">Deploy</div><div class="tool-name">Kubernetes</div><div class="tool-alt">ArgoCD, Helm</div></div>
+      <div class="tool-cell tool-highlight"><div class="tool-phase">Operate</div><div class="tool-name">Terraform</div><div class="tool-alt">Ansible, Pulumi</div></div>
+      <div class="tool-cell tool-highlight"><div class="tool-phase">Monitor</div><div class="tool-name">Prometheus</div><div class="tool-alt">Grafana, Datadog</div></div>
+    </div>
+    <p class="body-text" style="margin-top:1.5rem;text-align:center;font-size:1rem;">Las herramientas resaltadas son las que veremos en este bootcamp</p>
+  </div>
+  <div class="slide-footer">Bootcamp DevOps 2026 &mdash; Carlos Palanca</div>
+  <div class="slide-num">07 / 10</div>
+</section>
+
+<!-- SLIDE 9: ACTIVIDAD -->
+<section class="slide">
+  <div class="bg-glow" style="width:800px;height:800px;background:var(--accent-magenta);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Actividad</div>
+    <h2 class="headline headline-lg">Vuestra <em class="gradient-text">experiencia</em></h2>
+    <div class="activity-card">
+      <h3 class="headline headline-md" style="position:relative;">Que problemas creeis que existen al desarrollar software?</h3>
+      <div class="activity-steps">
+        <div class="activity-step">
+          <div class="step-num">1</div>
+          <div class="step-text">Formad grupos de 3-4 personas</div>
+        </div>
+        <div class="activity-step">
+          <div class="step-num">2</div>
+          <div class="step-text">Discutid y escribid 3 problemas en un post-it o documento</div>
+        </div>
+        <div class="activity-step">
+          <div class="step-num">3</div>
+          <div class="step-text">Cada grupo comparte su problema principal con la clase</div>
+        </div>
+      </div>
+      <p class="body-text" style="margin-top:2rem;position:relative;">10 minutos para discutir + 5 minutos para compartir</p>
+      <div style="margin-top:2rem;text-align:center;"><a href="dia1-bloque1-cultura-devops-lab.html" style="display:inline-block;padding:1rem 2.5rem;background:linear-gradient(135deg, var(--accent-1), var(--accent-2));color:white;text-decoration:none;border-radius:100px;font-family:'JetBrains Mono',monospace;font-size:0.9rem;letter-spacing:0.05em;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">Abrir laboratorio &rarr;</a></div>
+    </div>
+  </div>
+  <div class="slide-footer">Bootcamp DevOps 2026 &mdash; Carlos Palanca</div>
+  <div class="slide-num">08 / 10</div>
+</section>
+
+<!-- SLIDE 10: RESUMEN -->
+<section class="slide">
+  <div class="bg-grid"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Resumen</div>
+    <h2 class="headline headline-lg">Lo que hemos <em class="gradient-text">aprendido</em></h2>
+    <ul class="recap-list">
+      <li><span class="recap-bullet"></span>DevOps es una cultura de colaboracion entre Desarrollo y Operaciones</li>
+      <li><span class="recap-bullet"></span>CAMS: Cultura, Automatizacion, Medicion, Compartir</li>
+      <li><span class="recap-bullet"></span>Las metricas DORA miden el rendimiento real de un equipo</li>
+      <li><span class="recap-bullet"></span>El ciclo DevOps es continuo: Plan, Code, Build, Test, Release, Deploy, Operate, Monitor</li>
+    </ul>
+    <div class="next-block">
+      <div class="next-label">Siguiente bloque</div>
+      <div class="next-title">Git Practico &mdash; tu primera herramienta DevOps</div>
+    </div>
+  </div>
+  <div class="slide-footer">Bootcamp DevOps 2026 &mdash; Carlos Palanca</div>
+  <div class="slide-num">10 / 10</div>
+</section>
+
+<!-- NAV SLIDE -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Navegacion</div>
+    <h2 class="headline headline-lg">Continuar con el <span class="gradient-text">bootcamp</span></h2>
+    <div class="nav-links">
+      <a href="dia1-00-sobre-mi.html" class="nav-link nav-prev">
+        <span class="nav-arrow">&larr;</span>
+        <span class="nav-label">Anterior</span>
+        <span class="nav-title">Sobre Mi</span>
+      </a>
+      <a href="dia1-bloque2-git-practico.html" class="nav-link nav-next">
+        <span class="nav-label">Siguiente</span>
+        <span class="nav-title">Git Practico</span>
+        <span class="nav-arrow">&rarr;</span>
+      </a>
+    </div>
+  </div>
+  <div class="slide-footer"><span style="font-family:'DM Sans',sans-serif;font-weight:300;">carlos<strong style="color:var(--accent-magenta);font-weight:700;">palanca</strong>.es</span></div>
+</section>
+
+<script>
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('btn-dark').classList.toggle('active', theme === 'dark');
+  document.getElementById('btn-light').classList.toggle('active', theme === 'light');
+  localStorage.setItem('slide-theme', theme);
+}
+const saved = localStorage.getItem('slide-theme');
+if (saved) setTheme(saved);
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'ArrowRight') {
+    e.preventDefault();
+    const slides = document.querySelectorAll('.slide');
+    const current = Math.round(window.scrollY / window.innerHeight);
+    slides[Math.min(current + 1, slides.length - 1)].scrollIntoView({ behavior: 'smooth' });
+  }
+  if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+    e.preventDefault();
+    const slides = document.querySelectorAll('.slide');
+    const current = Math.round(window.scrollY / window.innerHeight);
+    slides[Math.max(current - 1, 0)].scrollIntoView({ behavior: 'smooth' });
+  }
+});
+</script>
+
+</body>
+</html>

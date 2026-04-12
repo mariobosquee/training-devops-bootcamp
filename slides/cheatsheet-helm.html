@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Helm — Cheat Sheet</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00d4aa; --accent-2: #00a3e0;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00d4aa; --accent-2: #00a3e0;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); }
+
+  .page-wrapper { max-width: 900px; margin: 0 auto; padding: 6rem 2rem 4rem; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(3rem, 8vw, 6.5rem); }
+  .headline-lg { font-size: clamp(2rem, 5vw, 4rem); }
+  .body-text { font-size: 1.15rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1.5rem; }
+
+  .bg-glow { position: absolute; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: absolute; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+
+  .cover { text-align: center; padding: 4rem 0 3rem; position: relative; overflow: hidden; }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.8rem; font-style: italic; color: var(--text-muted); margin-top: 1rem; margin-bottom: 3rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 2rem auto; }
+
+  .section { margin-top: 4rem; position: relative; }
+
+  .slide-list { list-style: none; padding: 0; margin-top: 1rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.1rem; position: relative; border-bottom: 1px solid var(--border); }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; align-items: center; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); margin-left: auto; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  strong { color: var(--text-primary); }
+
+  .footer-nav { margin-top: 5rem; text-align: center; }
+  .nav-link { display: inline-flex; flex-direction: column; gap: 0.3rem; padding: 2rem 3rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; text-decoration: none; color: var(--text-primary); transition: border-color 0.3s, transform 0.2s; }
+  .nav-link:hover { border-color: var(--accent-1); transform: translateY(-3px); }
+  .nav-arrow { font-size: 1.5rem; color: var(--accent-1); }
+  .nav-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); }
+  .nav-title { font-family: 'Instrument Serif', serif; font-size: 1.4rem; }
+
+  .ordered-list { list-style: none; padding: 0; margin-top: 1rem; counter-reset: steps; }
+  .ordered-list li { padding: 0.8rem 0 0.8rem 2.5rem; color: var(--text-muted); font-size: 1.1rem; position: relative; border-bottom: 1px solid var(--border); counter-increment: steps; }
+  .ordered-list li::before { content: counter(steps); position: absolute; left: 0; top: 0.7rem; width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: white; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+
+  @media print { .theme-toggle, .logo-fixed { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed" style="text-decoration:none;"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+<div class="page-wrapper">
+
+  <!-- Cover -->
+  <div class="cover">
+    <div class="bg-glow" style="width:600px;height:600px;background:#00d4aa;top:-200px;right:-100px;"></div>
+    <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;bottom:-200px;left:-100px;"></div>
+    <div class="bg-noise"></div>
+    <div class="cover-brand">Cheat Sheet</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">Helm</span></h1>
+    <p class="cover-subtitle">Referencia rapida</p>
+    <div class="cover-line"></div>
+  </div>
+
+  <!-- 1. Repositorios -->
+  <div class="section">
+    <div class="tag">01 &mdash; Repositorios</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Repositorios</span></h2>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">helm repo add &lt;nombre&gt; &lt;url&gt;    <span style="color:var(--text-dim);"># Anadir un repositorio</span>
+helm repo update                  <span style="color:var(--text-dim);"># Actualizar indice local</span>
+helm repo list                    <span style="color:var(--text-dim);"># Listar repos configurados</span>
+helm search repo &lt;keyword&gt;       <span style="color:var(--text-dim);"># Buscar charts en repos locales</span>
+helm search hub &lt;keyword&gt;        <span style="color:var(--text-dim);"># Buscar en ArtifactHub</span>
+helm repo remove &lt;nombre&gt;        <span style="color:var(--text-dim);"># Eliminar un repositorio</span></div>
+    </div>
+    <p class="body-text"><strong>Ejemplo con Bitnami:</strong></p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo update
+helm search repo bitnami/nginx</div>
+    </div>
+  </div>
+
+  <!-- 2. Instalar -->
+  <div class="section">
+    <div class="tag">02 &mdash; Instalar</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Instalar</span></h2>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">helm install &lt;release&gt; &lt;chart&gt;                <span style="color:var(--text-dim);"># Instalacion basica</span>
+helm install &lt;release&gt; &lt;chart&gt; -f values.yaml  <span style="color:var(--text-dim);"># Con fichero de values</span>
+helm install &lt;release&gt; &lt;chart&gt; --set key=val    <span style="color:var(--text-dim);"># Sobreescribir un value</span>
+helm install &lt;release&gt; &lt;chart&gt; -n &lt;namespace&gt;   <span style="color:var(--text-dim);"># En un namespace concreto</span>
+helm install &lt;release&gt; &lt;chart&gt; --create-namespace <span style="color:var(--text-dim);"># Crear namespace si no existe</span>
+helm install &lt;release&gt; &lt;chart&gt; --dry-run        <span style="color:var(--text-dim);"># Simular sin instalar</span></div>
+    </div>
+    <p class="body-text"><strong>Ejemplo:</strong></p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">helm install mi-nginx bitnami/nginx \
+  -f values-custom.yaml \
+  --set service.type=ClusterIP \
+  -n web --create-namespace</div>
+    </div>
+  </div>
+
+  <!-- 3. Gestionar releases -->
+  <div class="section">
+    <div class="tag">03 &mdash; Gestionar releases</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Gestionar releases</span></h2>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">helm list                          <span style="color:var(--text-dim);"># Listar releases del namespace actual</span>
+helm list -A                       <span style="color:var(--text-dim);"># Listar releases de todos los namespaces</span>
+helm status &lt;release&gt;              <span style="color:var(--text-dim);"># Estado detallado de un release</span>
+helm history &lt;release&gt;             <span style="color:var(--text-dim);"># Historial de revisiones</span></div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">helm upgrade &lt;release&gt; &lt;chart&gt;              <span style="color:var(--text-dim);"># Actualizar un release</span>
+helm upgrade &lt;release&gt; &lt;chart&gt; -f values.yaml <span style="color:var(--text-dim);"># Actualizar con nuevos values</span>
+helm upgrade --install &lt;release&gt; &lt;chart&gt;      <span style="color:var(--text-dim);"># Instalar si no existe, upgrade si existe</span></div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">helm rollback &lt;release&gt; &lt;revision&gt;   <span style="color:var(--text-dim);"># Volver a una revision anterior</span>
+helm uninstall &lt;release&gt;             <span style="color:var(--text-dim);"># Eliminar un release</span>
+helm uninstall &lt;release&gt; -n &lt;ns&gt;     <span style="color:var(--text-dim);"># Eliminar de un namespace concreto</span></div>
+    </div>
+  </div>
+
+  <!-- 4. Inspeccionar charts -->
+  <div class="section">
+    <div class="tag">04 &mdash; Inspeccionar charts</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Inspeccionar charts</span></h2>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">helm show chart &lt;chart&gt;    <span style="color:var(--text-dim);"># Metadatos del chart (Chart.yaml)</span>
+helm show values &lt;chart&gt;   <span style="color:var(--text-dim);"># Values por defecto del chart</span>
+helm show readme &lt;chart&gt;   <span style="color:var(--text-dim);"># README del chart</span>
+helm show all &lt;chart&gt;      <span style="color:var(--text-dim);"># Todo: chart + values + readme</span></div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">helm template &lt;release&gt; &lt;chart&gt;              <span style="color:var(--text-dim);"># Renderizar YAML sin instalar</span>
+helm template &lt;release&gt; &lt;chart&gt; -f values.yaml <span style="color:var(--text-dim);"># Renderizar con values custom</span>
+helm get values &lt;release&gt;                     <span style="color:var(--text-dim);"># Ver values de un release instalado</span>
+helm get manifest &lt;release&gt;                    <span style="color:var(--text-dim);"># Ver manifiestos de un release</span></div>
+    </div>
+  </div>
+
+  <!-- 5. ArtifactHub -->
+  <div class="section">
+    <div class="tag">05 &mdash; ArtifactHub</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">ArtifactHub</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">
+      <strong>artifacthub.io</strong> es el buscador publico y centralizado de charts de Helm.
+      Contiene miles de charts listos para usar &mdash; nginx, PostgreSQL, Redis, Grafana, ArgoCD,
+      Prometheus y muchos mas. Cada chart incluye documentacion detallada de todos los values
+      configurables, versiones disponibles y ejemplos de uso. Los charts mas populares estan
+      mantenidos por la comunidad y por empresas como Bitnami. Antes de crear un chart propio,
+      busca siempre aqui: lo mas probable es que ya exista uno listo para instalar.
+    </p>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body">helm search hub nginx       <span style="color:var(--text-dim);"># Buscar "nginx" en ArtifactHub desde la CLI</span></div>
+    </div>
+  </div>
+
+  <!-- 6. Flujo tipico -->
+  <div class="section">
+    <div class="tag">06 &mdash; Flujo tipico</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Flujo tipico</span></h2>
+    <ol class="ordered-list">
+      <li>Buscar el chart en <strong>ArtifactHub</strong> o con <code style="color:var(--accent-1);">helm search</code></li>
+      <li>Anadir el repositorio con <code style="color:var(--accent-1);">helm repo add</code></li>
+      <li>Inspeccionar los values por defecto con <code style="color:var(--accent-1);">helm show values</code></li>
+      <li>Crear un fichero <strong>values-custom.yaml</strong> con tu configuracion</li>
+      <li>Instalar con <code style="color:var(--accent-1);">helm install -f values-custom.yaml</code></li>
+      <li>Verificar con <code style="color:var(--accent-1);">helm status</code> y <code style="color:var(--accent-1);">kubectl get pods</code></li>
+      <li>Actualizar con <code style="color:var(--accent-1);">helm upgrade</code> cuando cambien los values</li>
+      <li>Si algo falla, <code style="color:var(--accent-1);">helm rollback</code> a la revision anterior</li>
+    </ol>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body"><span style="color:var(--text-dim);"># Flujo completo en 5 comandos</span>
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm show values bitnami/nginx > values-custom.yaml
+<span style="color:var(--text-dim);"># ... editar values-custom.yaml ...</span>
+helm install mi-nginx bitnami/nginx -f values-custom.yaml -n web --create-namespace
+helm status mi-nginx -n web</div>
+    </div>
+  </div>
+
+  <!-- Footer nav -->
+  <div class="footer-nav">
+    <a href="index.html" class="nav-link">
+      <span class="nav-arrow">&larr;</span>
+      <span class="nav-label">Volver</span>
+      <span class="nav-title">Indice del Bootcamp</span>
+    </a>
+  </div>
+
+</div>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+</script>
+
+</body>
+</html>

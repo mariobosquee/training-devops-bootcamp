@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teoria: GitOps con ArgoCD — Bootcamp DevOps 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00a3e0; --accent-2: #6366f1;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00a3e0; --accent-2: #6366f1;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); min-height: 100vh; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(2.5rem, 6vw, 5rem); }
+  .headline-lg { font-size: clamp(1.8rem, 4vw, 3rem); }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .body-text { font-size: 1.1rem; line-height: 1.8; color: var(--text-muted); margin-bottom: 1rem; }
+
+  .bg-glow { position: fixed; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: fixed; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  strong { color: var(--text-primary); }
+
+  .container { max-width: 860px; margin: 0 auto; padding: 6rem 2rem 4rem; position: relative; z-index: 2; }
+
+  .cover { text-align: center; margin-bottom: 4rem; padding-bottom: 3rem; border-bottom: 1px solid var(--border); }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 2rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.4rem; font-style: italic; color: var(--text-muted); margin-top: 0.5rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 1.5rem auto; }
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1rem; }
+
+  .section { margin-bottom: 3rem; }
+
+  .slide-list { list-style: none; padding: 0; margin: 1rem 0 1.5rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.05rem; position: relative; border-bottom: 1px solid var(--border); line-height: 1.6; }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; overflow-x: auto; }
+
+  .slide-table { width: 100%; margin: 1.5rem 0; border-collapse: separate; border-spacing: 0 0.4rem; }
+  .slide-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 0.6rem 1.2rem; text-align: left; }
+  .slide-table td { padding: 1rem 1.2rem; background: var(--bg-card); font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; }
+  .slide-table tr td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; color: var(--text-primary); }
+  .slide-table tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  .back-link { display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--accent-1); text-decoration: none; padding: 0.8rem 1.8rem; border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); border-radius: 100px; transition: all 0.2s; margin-top: 2rem; }
+  .back-link:hover { background: var(--accent-1); color: white; }
+
+  .footer { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; }
+</style>
+</head>
+<body>
+
+<div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;top:-200px;right:-100px;"></div>
+<div class="bg-glow" style="width:500px;height:500px;background:#6366f1;bottom:-200px;left:-100px;"></div>
+<div class="bg-noise"></div>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed" style="text-decoration:none;"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+<div class="container">
+
+  <div class="cover">
+    <div class="cover-brand">T-Systems &middot; Universidad de Granada &middot; 2026</div>
+    <span class="tag">Teoria &middot; Dia 3 &mdash; Bloque 4</span>
+    <h1 class="headline headline-xl"><span class="gradient-text">GitOps con ArgoCD</span></h1>
+    <p class="cover-subtitle">Git como fuente de verdad para Kubernetes</p>
+    <div class="cover-line"></div>
+  </div>
+
+  <!-- Que es GitOps -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">Que es GitOps</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Hasta ahora, para desplegar cambios en Kubernetes habeis ejecutado comandos manualmente: <code style="font-family:'JetBrains Mono',monospace;font-size:0.9em;background:var(--bg-card);padding:0.15rem 0.5rem;border-radius:6px;border:1px solid var(--border);">kubectl apply</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:0.9em;background:var(--bg-card);padding:0.15rem 0.5rem;border-radius:6px;border:1px solid var(--border);">helm install</code>, etc. Esto funciona, pero tiene problemas:</p>
+    <ul class="slide-list">
+      <li>No queda registro claro de <strong>quien cambio que y cuando</strong>.</li>
+      <li>Si alguien ejecuta un comando incorrecto, es <strong>dificil volver atras</strong>.</li>
+      <li>Cada persona del equipo puede tener una <strong>version diferente</strong> de los ficheros YAML.</li>
+    </ul>
+    <p class="body-text"><strong>GitOps resuelve esto con una idea sencilla: Git es la unica fuente de verdad.</strong> Todo lo que debe estar en el cluster se define en un repositorio Git. Si quieres cambiar algo en el cluster, no ejecutas comandos: haces un commit en Git. Una herramienta automatica detecta el cambio y actualiza el cluster por ti.</p>
+  </div>
+
+  <!-- Analogia -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">Analogia: Google Docs</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Pensad en Google Docs. Cuando alguien edita un documento, todos los demas ven el cambio al instante. No hace falta enviar el fichero por correo ni avisar a nadie. El documento compartido es la fuente de verdad y todos trabajan sobre el.</p>
+    <p class="body-text">GitOps funciona igual: el repositorio Git es el "documento compartido". Cuando alguien hace un cambio (commit + push), el cluster se actualiza automaticamente para reflejar ese cambio.</p>
+  </div>
+
+  <!-- Push vs Pull -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">Push vs Pull</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;">Hay dos modelos para aplicar los cambios de Git al cluster:</p>
+    <table class="slide-table">
+      <thead><tr><th>Modelo</th><th>Como funciona</th></tr></thead>
+      <tbody>
+        <tr><td>Push</td><td>Un sistema externo (como una pipeline de CI/CD) ejecuta <code style="font-family:'JetBrains Mono',monospace;font-size:0.85em;">kubectl apply</code> despues de cada commit. El sistema "empuja" los cambios al cluster.</td></tr>
+        <tr><td>Pull</td><td>Una herramienta dentro del cluster vigila el repositorio Git continuamente. Cuando detecta un cambio, ella misma "tira" de los nuevos ficheros y los aplica.</td></tr>
+      </tbody>
+    </table>
+    <p class="body-text">El modelo <strong>Pull</strong> es mas seguro porque:</p>
+    <ul class="slide-list">
+      <li>Nadie externo necesita <strong>credenciales del cluster</strong>.</li>
+      <li>Si alguien modifica algo en el cluster manualmente, la herramienta lo <strong>detecta y lo corrige</strong>.</li>
+    </ul>
+  </div>
+
+  <!-- Que es ArgoCD -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">Que es ArgoCD</span></h2>
+    <p class="body-text" style="margin-top:1.5rem;"><strong>ArgoCD es una herramienta GitOps que funciona con el modelo Pull.</strong> Se instala dentro del cluster de Kubernetes y hace lo siguiente:</p>
+    <ul class="slide-list">
+      <li><strong>Vigila</strong> un repositorio Git que contiene los manifiestos YAML de tu aplicacion.</li>
+      <li><strong>Compara</strong> el estado del repositorio con el estado real del cluster.</li>
+      <li><strong>Sincroniza</strong> el cluster para que coincida con Git si hay diferencias.</li>
+    </ul>
+    <p class="body-text">ArgoCD incluye una <strong>interfaz web</strong> donde puedes ver:</p>
+    <ul class="slide-list">
+      <li>Todas las aplicaciones desplegadas.</li>
+      <li>Si estan sincronizadas con Git o no.</li>
+      <li>El estado de cada recurso (pods, servicios, deployments, etc.).</li>
+      <li>Un mapa visual de los recursos y sus relaciones.</li>
+    </ul>
+  </div>
+
+  <!-- Resumen -->
+  <div class="section">
+    <h2 class="headline headline-lg"><span class="gradient-text">Resumen</span></h2>
+    <ul class="slide-list" style="margin-top:1.5rem;">
+      <li><strong>GitOps</strong> = Git es la unica fuente de verdad. Cambias Git, cambia el cluster.</li>
+      <li><strong>Modelo Pull</strong> = ArgoCD vigila Git desde dentro del cluster y aplica los cambios.</li>
+      <li><strong>ArgoCD</strong> = herramienta GitOps con interfaz web que sincroniza Kubernetes con Git.</li>
+      <li>No ejecutas <code style="font-family:'JetBrains Mono',monospace;font-size:0.9em;background:var(--bg-card);padding:0.15rem 0.5rem;border-radius:6px;border:1px solid var(--border);">kubectl apply</code> manualmente: haces commit y ArgoCD se encarga.</li>
+    </ul>
+  </div>
+
+  <div style="text-align:center;padding-top:2rem;border-top:1px solid var(--border);">
+    <a href="index.html" class="back-link">&larr; Volver al indice</a>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span class="logo">carlos<strong>palanca</strong>.es</span> &middot; Bootcamp DevOps 2026
+</div>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+</script>
+
+</body>
+</html>

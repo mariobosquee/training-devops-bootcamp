@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pipeline Completo — Bootcamp DevOps 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); }
+
+  .slide { min-height: 100vh; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; padding: 4rem; position: relative; overflow: hidden; }
+  .slide-inner { max-width: 1100px; width: 100%; z-index: 2; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(3rem, 8vw, 6.5rem); }
+  .headline-lg { font-size: clamp(2rem, 5vw, 4rem); }
+  .headline-md { font-size: clamp(1.5rem, 3vw, 2.5rem); }
+  .body-text { font-size: 1.15rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1.5rem; }
+  .slide-num { position: absolute; bottom: 2rem; right: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-dim); }
+  .slide-footer { position: absolute; bottom: 2rem; left: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); }
+
+  .bg-glow { position: absolute; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: absolute; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+  .bg-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+  .slide-cover { text-align: center; }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.8rem; font-style: italic; color: var(--text-muted); margin-top: 1rem; margin-bottom: 3rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 2rem auto; }
+  .cover-meta { display: flex; gap: 2rem; justify-content: center; font-size: 0.9rem; color: var(--text-dim); }
+
+  .slide-list { list-style: none; padding: 0; margin-top: 1rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.1rem; position: relative; border-bottom: 1px solid var(--border); }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; }
+
+  .slide-table { width: 100%; margin: 1.5rem 0; border-collapse: separate; border-spacing: 0 0.4rem; }
+  .slide-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 0.6rem 1.2rem; text-align: left; }
+  .slide-table td { padding: 1rem 1.2rem; background: var(--bg-card); font-size: 1rem; color: var(--text-muted); }
+  .slide-table tr td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; color: var(--text-primary); }
+  .slide-table tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  strong { color: var(--text-primary); }
+
+  .alert { background: var(--bg-card); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); border-radius: 14px; padding: 1.5rem; margin: 1.5rem 0; }
+  .alert-title { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-1); margin-bottom: 0.5rem; }
+
+  .troubleshoot { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; margin: 1.5rem 0; }
+  .troubleshoot-title { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: #febc2e; margin-bottom: 1rem; }
+  .troubleshoot-item { padding: 0.8rem 0; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .troubleshoot-item:last-child { border-bottom: none; }
+  .troubleshoot-problem { font-size: 0.9rem; color: var(--text-primary); }
+  .troubleshoot-solution { font-size: 0.9rem; color: var(--text-muted); }
+
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: white; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 600; margin-right: 0.75rem; flex-shrink: 0; }
+
+  .nav-links { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem; }
+  .nav-link { display: flex; flex-direction: column; gap: 0.3rem; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; text-decoration: none; color: var(--text-primary); transition: border-color 0.3s, transform 0.2s; }
+  .nav-link:hover { border-color: var(--accent-1); transform: translateY(-3px); }
+  .nav-prev { text-align: left; }
+  .nav-next { text-align: right; }
+  .nav-arrow { font-size: 1.5rem; color: var(--accent-1); }
+  .nav-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); }
+  .nav-title { font-family: 'Instrument Serif', serif; font-size: 1.4rem; }
+
+  @media print { .slide { page-break-after: always; } .theme-toggle, .logo-fixed { display: none; } html { scroll-snap-type: none; } }
+</style>
+</head>
+<body>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed" style="text-decoration:none;"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+<!-- SLIDE 1: COVER -->
+<section class="slide slide-cover">
+  <div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;top:-200px;right:-100px;"></div><div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-200px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="cover-brand">T-Systems &middot; Universidad de Granada &middot; 2026</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">Pipeline Completo</span></h1>
+    <p class="cover-subtitle">Bootcamp DevOps 2026 &mdash; Dia 2 &mdash; Bloque 3</p>
+    <div class="cover-line"></div>
+    <div class="cover-meta"><span>60 min laboratorio + 15 min showcase</span><span>&middot;</span><span>En parejas</span></div>
+  </div>
+  <div class="slide-num">01 / 16</div>
+</section>
+
+<!-- SLIDE 2: ESTRUCTURA -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Estructura</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Partes del laboratorio</span></h2>
+    <table class="slide-table">
+      <thead><tr><th>Parte</th><th>Que hareis</th><th>Tiempo</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Anadir linting al frontend</td><td>15 min</td></tr>
+        <tr><td>2</td><td>Anadir security scanning</td><td>15 min</td></tr>
+        <tr><td>3</td><td>Optimizar con cache</td><td>15 min</td></tr>
+        <tr><td>4</td><td>Anadir status badge al README</td><td>10 min</td></tr>
+        <tr><td>5</td><td>Showcase (demo a la clase)</td><td>15 min</td></tr>
+      </tbody>
+    </table>
+    <p class="body-text">Partimos del pipeline del laboratorio anterior (test &rarr; build &rarr; push).</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">02 / 16</div>
+</section>
+
+<!-- SLIDE 3: PARTE 1 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;top:-150px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 1 &middot; 15 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Frontend linting</span></h2>
+    <p class="cover-subtitle">Anadir comprobacion de calidad de codigo en paralelo</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">03 / 16</div>
+</section>
+
+<!-- SLIDE 4: PARTE 1 - Test local -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 1</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Probar lint en local</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">1</span> <strong>Verificad que lint funciona en local:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">cd frontend
+npm install
+npm run lint
+# Debeis ver el resultado del linter (0 errores idealmente)</pre></div>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Anadid un job <code>lint</code> en paralelo con <code>test</code>:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout codigo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Instalar dependencias frontend
+        run: npm install
+        working-directory: ./frontend
+
+      - name: Ejecutar linter
+        run: npm run lint
+        working-directory: ./frontend</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">04 / 16</div>
+</section>
+
+<!-- SLIDE 5: PARTE 1 - Actualizar build -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 1</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Build depende de lint y test</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">3</span> <strong>Actualizad el job <code>build</code> para que dependa de ambos:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">  build:
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      # ... (el resto del job build igual que antes)</pre></div>
+
+      <div class="alert">
+        <div class="alert-title">Clave</div>
+        <p class="body-text"><code>needs: [lint, test]</code> hace que <code>lint</code> y <code>test</code> se ejecuten en paralelo, y <code>build</code> solo empieza cuando ambos han pasado.</p>
+      </div>
+
+      <p class="body-text"><span class="step-num">4</span> <strong>Push y verificar:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">git add .github/workflows/ci.yml
+git commit -m "ci: add lint job in parallel"
+git push</pre></div>
+
+      <div class="troubleshoot">
+        <div class="troubleshoot-title">Si algo falla</div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">lint falla con errores</div><div class="troubleshoot-solution">Corregid los errores en local con <code>npm run lint -- --fix</code></div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">No hay script lint</div><div class="troubleshoot-solution">Anadid <code>"lint": "eslint ."</code> en <code>package.json</code> del frontend</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">05 / 16</div>
+</section>
+
+<!-- SLIDE 6: PARTE 2 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-150px;right:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 2 &middot; 15 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Security scanning</span></h2>
+    <p class="cover-subtitle">Detectar vulnerabilidades en dependencias</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">06 / 16</div>
+</section>
+
+<!-- SLIDE 7: PARTE 2 - npm audit -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 2</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Anadir npm audit</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">1</span> <strong>Probad en local:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">cd backend
+npm audit
+# Muestra vulnerabilidades conocidas en las dependencias</pre></div>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Anadid un step de seguridad al job <code>test</code>:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">      - name: Security audit
+        run: npm audit --audit-level=moderate
+        working-directory: ./backend
+        continue-on-error: true</pre></div>
+
+      <div class="alert">
+        <div class="alert-title">Por que continue-on-error?</div>
+        <p class="body-text"><code>continue-on-error: true</code> permite que el pipeline siga aunque haya vulnerabilidades. En produccion podeis quitarlo para bloquear el deploy si hay vulnerabilidades criticas.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">07 / 16</div>
+</section>
+
+<!-- SLIDE 8: PARTE 2 - Push y verificar -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 2</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Verificar el scanning</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">3</span> <strong>Push y verificar:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">git add .github/workflows/ci.yml
+git commit -m "ci: add security audit step"
+git push</pre></div>
+
+      <p class="body-text"><span class="step-num">4</span> <strong>En Actions, abrid el job <code>test</code> y verificad:</strong></p>
+      <ul class="slide-list">
+        <li>El step "Security audit" aparece en los logs</li>
+        <li>Si hay vulnerabilidades, aparecen listadas pero el pipeline sigue</li>
+        <li>El icono del step puede ser amarillo (warning) en vez de verde</li>
+      </ul>
+
+      <div class="troubleshoot">
+        <div class="troubleshoot-title">Si algo falla</div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">npm audit no reconocido</div><div class="troubleshoot-solution">Aseguraos de que <code>npm install</code> se ejecuta antes en el mismo job</div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Pipeline se bloquea</div><div class="troubleshoot-solution">Comprobad que habeis puesto <code>continue-on-error: true</code></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">08 / 16</div>
+</section>
+
+<!-- SLIDE 9: PARTE 3 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;top:-150px;right:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 3 &middot; 15 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Optimizar con cache</span></h2>
+    <p class="cover-subtitle">Reducir tiempos de ejecucion con actions/cache</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">09 / 16</div>
+</section>
+
+<!-- SLIDE 10: PARTE 3 - Anadir cache -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 3</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Anadir cache de dependencias</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">1</span> <strong>Anotad el tiempo actual del job <code>test</code></strong> en la pestana Actions.</p>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Anadid cache en el job <code>test</code> (despues de checkout, antes de npm install):</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ./backend/node_modules
+          key: ${{ runner.os }}-node-backend-${{ hashFiles('backend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-backend-</pre></div>
+
+      <p class="body-text"><span class="step-num">3</span> <strong>Haced lo mismo para el job <code>lint</code> (con path del frontend):</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ./frontend/node_modules
+          key: ${{ runner.os }}-node-frontend-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-frontend-</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">10 / 16</div>
+</section>
+
+<!-- SLIDE 11: PARTE 3 - Comparar tiempos -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 3</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Comparar tiempos</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">4</span> <strong>Push y ejecutar dos veces:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">git add .github/workflows/ci.yml
+git commit -m "ci: add npm cache"
+git push</pre></div>
+
+      <p class="body-text"><span class="step-num">5</span> <strong>Primera ejecucion:</strong> la cache se crea (no hay mejora aun).</p>
+
+      <p class="body-text"><span class="step-num">6</span> <strong>Haced un cambio menor y pushed de nuevo:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body"># Anadid un comentario al README o un archivo
+git commit --allow-empty -m "ci: test cache speed"
+git push</pre></div>
+
+      <p class="body-text"><span class="step-num">7</span> <strong>Comparad los tiempos:</strong> la segunda ejecucion deberia ser mas rapida en <code>npm install</code>.</p>
+
+      <div class="troubleshoot">
+        <div class="troubleshoot-title">Si algo falla</div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">Cache miss siempre</div><div class="troubleshoot-solution">Comprobad que la ruta de <code>path:</code> coincide con donde se instalan los modulos</div></div>
+        <div class="troubleshoot-item"><div class="troubleshoot-problem">No hay mejora visible</div><div class="troubleshoot-solution">Normal si el proyecto es pequeno. La mejora es mayor con muchas dependencias</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">11 / 16</div>
+</section>
+
+<!-- SLIDE 12: PARTE 4 TITULO -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-150px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Parte 4 &middot; 10 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Status badge</span></h2>
+    <p class="cover-subtitle">Mostrar el estado del pipeline en el README</p>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">12 / 16</div>
+</section>
+
+<!-- SLIDE 13: PARTE 4 - Badge -->
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Parte 4</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Anadir el badge</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text"><span class="step-num">1</span> <strong>Obtener la URL del badge:</strong></p>
+      <ul class="slide-list">
+        <li>Id a la pestana <strong>Actions</strong> en GitHub</li>
+        <li>Click en el nombre del workflow (<strong>CI Pipeline</strong>)</li>
+        <li>Click en el boton <strong>"..."</strong> (tres puntos) arriba a la derecha</li>
+        <li>Seleccionad <strong>"Create status badge"</strong></li>
+        <li>Copiad el Markdown</li>
+      </ul>
+
+      <p class="body-text"><span class="step-num">2</span> <strong>Anadid al principio de <code>README.md</code>:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">![CI Pipeline](https://github.com/USUARIO/REPO/actions/workflows/ci.yml/badge.svg)</pre></div>
+
+      <p class="body-text"><span class="step-num">3</span> <strong>Push:</strong></p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">git add README.md
+git commit -m "docs: add CI status badge"
+git push</pre></div>
+
+      <p class="body-text">Verificad que el badge aparece en la pagina principal del repositorio.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">13 / 16</div>
+</section>
+
+<!-- SLIDE 14: BONUS -->
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Bonus</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Bonus: Service container MongoDB</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text">Si terminais antes de tiempo, anadid un servicio MongoDB al job de test:</p>
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">  test:
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+    steps:
+      # ... vuestros steps de siempre
+      - name: Ejecutar tests
+        run: npm test
+        working-directory: ./backend
+        env:
+          MONGODB_URI: mongodb://localhost:27017/bookstore_test</pre></div>
+
+      <div class="alert">
+        <div class="alert-title">Service containers</div>
+        <p class="body-text">GitHub Actions permite levantar servicios (como bases de datos) al lado de vuestro codigo. Funcionan como contenedores Docker que se crean y destruyen con cada ejecucion.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">14 / 16</div>
+</section>
+
+<!-- SLIDE 15: SHOWCASE -->
+<section class="slide">
+  <div class="bg-glow" style="width:500px;height:500px;background:#00a3e0;bottom:-150px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Showcase &middot; 15 minutos</div>
+    <h2 class="headline headline-xl"><span class="gradient-text">Showcase</span></h2>
+    <p class="cover-subtitle">Demostrad vuestro pipeline completo</p>
+    <div style="margin-top:3rem; text-align:left; max-width:700px; margin-left:auto; margin-right:auto;">
+      <p class="body-text">Cada pareja tiene <strong>2-3 minutos</strong> para mostrar:</p>
+      <ul class="slide-list">
+        <li>Pipeline con <strong>lint + test en paralelo</strong> y build secuencial</li>
+        <li>Step de <strong>security audit</strong> en los logs</li>
+        <li><strong>Cache hit</strong> en la segunda ejecucion</li>
+        <li><strong>Badge</strong> verde en el README</li>
+      </ul>
+      <p class="body-text" style="margin-top:1.5rem;"><strong>Checklist final:</strong></p>
+      <ul class="slide-list">
+        <li>3+ jobs (lint, test, build)</li>
+        <li>Jobs en paralelo con <code>needs</code></li>
+        <li>Security scanning</li>
+        <li>Cache de dependencias</li>
+        <li>Status badge en README</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">15 / 16</div>
+</section>
+
+<!-- SLIDE 16: NAVEGACION -->
+<section class="slide">
+  <div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;bottom:-200px;left:-100px;"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Navegacion</div>
+    <h2 class="headline headline-lg">Volver a las <span class="gradient-text">slides</span></h2>
+    <div class="nav-links">
+      <a href="dia2-bloque2-github-actions.html" class="nav-link nav-prev"><span class="nav-arrow">&larr;</span><span class="nav-label">Slides</span><span class="nav-title">GitHub Actions</span></a>
+      <a href="dia2-bloque2-github-actions.html" class="nav-link nav-next"><span class="nav-label">Siguiente</span><span class="nav-title">GitHub Actions</span><span class="nav-arrow">&rarr;</span></a>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+</section>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+document.addEventListener('keydown',e=>{const sl=document.querySelectorAll('.slide');const c=Math.round(window.scrollY/window.innerHeight);if(['ArrowDown',' ','ArrowRight'].includes(e.key)){e.preventDefault();sl[Math.min(c+1,sl.length-1)].scrollIntoView({behavior:'smooth'});}if(['ArrowUp','ArrowLeft'].includes(e.key)){e.preventDefault();sl[Math.max(c-1,0)].scrollIntoView({behavior:'smooth'});}});
+</script>
+
+</body>
+</html>

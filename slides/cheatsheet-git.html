@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cheat Sheet: Git — Bootcamp DevOps 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00a3e0; --accent-2: #00d4aa;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); min-height: 100vh; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(2.5rem, 6vw, 5rem); }
+  .headline-lg { font-size: clamp(1.8rem, 4vw, 3rem); }
+  .headline-md { font-size: clamp(1.4rem, 3vw, 2.2rem); }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .body-text { font-size: 1.15rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 0.5rem; }
+  strong { color: var(--text-primary); }
+
+  .bg-glow { position: fixed; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: fixed; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; text-decoration: none; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 6rem 2rem 4rem; position: relative; z-index: 2; }
+
+  .cover { text-align: center; margin-bottom: 4rem; }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 2rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.4rem; font-style: italic; color: var(--text-muted); margin-top: 0.5rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 1.5rem auto; }
+
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1.5rem; }
+
+  section { margin-bottom: 3.5rem; }
+  section h2 { margin-bottom: 1.2rem; }
+  section h3 { font-family: 'DM Sans', sans-serif; font-size: 1.2rem; font-weight: 700; margin: 1.5rem 0 0.8rem; color: var(--text-primary); }
+
+  .slide-list { list-style: none; padding: 0; margin-top: 1rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.1rem; position: relative; border-bottom: 1px solid var(--border); }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; align-items: center; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-left: auto; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; }
+
+  .footer-nav { display: flex; justify-content: center; gap: 1rem; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .footer-nav a { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--accent-1); text-decoration: none; padding: 0.5rem 1.2rem; border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); border-radius: 100px; transition: all 0.2s; }
+  .footer-nav a:hover { background: var(--accent-1); color: white; }
+
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: white; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 600; margin-right: 0.5rem; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;top:-200px;right:-100px;"></div>
+<div class="bg-glow" style="width:500px;height:500px;background:#00d4aa;bottom:-200px;left:-100px;"></div>
+<div class="bg-noise"></div>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+<div class="container">
+  <div class="cover">
+    <div class="cover-brand">CHEAT SHEET</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">Git</span></h1>
+    <p class="cover-subtitle">Referencia rapida</p>
+    <div class="cover-line"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 1. CONFIGURACION INICIAL -->
+  <!-- ============================================================ -->
+  <section>
+    <span class="tag">CONFIGURACION</span>
+    <h2 class="headline headline-lg">Configuracion inicial</h2>
+    <p class="body-text">Lo primero que debes hacer tras instalar Git es configurar tu <strong>identidad</strong>. Estos datos apareceran en cada commit que hagas.</p>
+
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body"><span style="color:var(--text-dim);"># Configurar nombre y email (global para todos los repos)</span>
+git config --global user.name "Tu Nombre"
+git config --global user.email "tu@email.com"
+
+<span style="color:var(--text-dim);"># Definir rama principal como "main"</span>
+git config --global init.defaultBranch main
+
+<span style="color:var(--text-dim);"># Activar colores en la terminal</span>
+git config --global color.ui auto
+
+<span style="color:var(--text-dim);"># Ver toda la configuracion actual</span>
+git config --list</div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- 2. CREAR / CLONAR REPOSITORIO -->
+  <!-- ============================================================ -->
+  <section>
+    <span class="tag">REPOSITORIO</span>
+    <h2 class="headline headline-lg">Crear / clonar repositorio</h2>
+    <p class="body-text">Dos formas de empezar: crear un repo nuevo desde cero o clonar uno existente desde un remoto.</p>
+
+    <h3>Crear un repositorio nuevo</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body"><span style="color:var(--text-dim);"># Inicializar un repo en la carpeta actual</span>
+git init
+
+<span style="color:var(--text-dim);"># Inicializar un repo en una carpeta nueva</span>
+git init mi-proyecto</div>
+    </div>
+
+    <h3>Clonar un repositorio existente</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body"><span style="color:var(--text-dim);"># Clonar por HTTPS</span>
+git clone https://github.com/usuario/repo.git
+
+<span style="color:var(--text-dim);"># Clonar por SSH</span>
+git clone git@github.com:usuario/repo.git
+
+<span style="color:var(--text-dim);"># Clonar en una carpeta con nombre personalizado</span>
+git clone https://github.com/usuario/repo.git mi-carpeta</div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- 3. FLUJO BASICO -->
+  <!-- ============================================================ -->
+  <section>
+    <span class="tag">FLUJO BASICO</span>
+    <h2 class="headline headline-lg">Flujo basico</h2>
+    <p class="body-text">Los comandos que usaras el <strong>90% del tiempo</strong>. Domina estos y tendras el dia a dia cubierto.</p>
+
+    <h3>Ver estado y cambios</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body"><span style="color:var(--text-dim);"># Ver estado del working directory y staging area</span>
+git status
+
+<span style="color:var(--text-dim);"># Ver cambios no preparados (working dir vs staging)</span>
+git diff
+
+<span style="color:var(--text-dim);"># Ver cambios preparados (staging vs ultimo commit)</span>
+git diff --staged</div>
+    </div>
+
+    <h3>Preparar y confirmar cambios</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body"><span style="color:var(--text-dim);"># Agregar un archivo al staging area</span>
+git add archivo.txt
+
+<span style="color:var(--text-dim);"># Agregar todos los cambios</span>
+git add .
+
+<span style="color:var(--text-dim);"># Crear un commit con mensaje</span>
+git commit -m "feat: descripcion del cambio"
+
+<span style="color:var(--text-dim);"># Add + commit en un solo paso (solo archivos tracked)</span>
+git commit -am "fix: correccion rapida"</div>
+    </div>
+
+    <h3>Sincronizar con el remoto</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body"><span style="color:var(--text-dim);"># Subir commits al remoto</span>
+git push
+
+<span style="color:var(--text-dim);"># Bajar cambios del remoto y fusionar</span>
+git pull
+
+<span style="color:var(--text-dim);"># Subir rama nueva por primera vez</span>
+git push -u origin nombre-rama</div>
+    </div>
+
+    <h3>Historial</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body"><span style="color:var(--text-dim);"># Ver historial de commits</span>
+git log
+
+<span style="color:var(--text-dim);"># Historial compacto en una linea</span>
+git log --oneline
+
+<span style="color:var(--text-dim);"># Historial con grafico de ramas</span>
+git log --oneline --graph --all</div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- 4. RAMAS -->
+  <!-- ============================================================ -->
+  <section>
+    <span class="tag">RAMAS</span>
+    <h2 class="headline headline-lg">Ramas</h2>
+    <p class="body-text">Las ramas te permiten trabajar en <strong>funcionalidades aisladas</strong> sin afectar la rama principal.</p>
+
+    <h3>Crear y cambiar de rama</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body"><span style="color:var(--text-dim);"># Ver todas las ramas (local)</span>
+git branch
+
+<span style="color:var(--text-dim);"># Ver ramas locales y remotas</span>
+git branch -a
+
+<span style="color:var(--text-dim);"># Crear una rama nueva</span>
+git branch feature/login
+
+<span style="color:var(--text-dim);"># Cambiar a otra rama</span>
+git switch feature/login
+
+<span style="color:var(--text-dim);"># Crear y cambiar en un solo paso</span>
+git switch -c feature/login</div>
+    </div>
+
+    <h3>Fusionar ramas</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body"><span style="color:var(--text-dim);"># Primero, ir a la rama destino</span>
+git switch main
+
+<span style="color:var(--text-dim);"># Fusionar la rama feature en main</span>
+git merge feature/login
+
+<span style="color:var(--text-dim);"># Eliminar rama ya fusionada</span>
+git branch -d feature/login</div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- 5. RESOLVER CONFLICTOS -->
+  <!-- ============================================================ -->
+  <section>
+    <span class="tag">CONFLICTOS</span>
+    <h2 class="headline headline-lg">Resolver conflictos</h2>
+    <p class="body-text">Cuando dos ramas modifican la <strong>misma linea</strong>, Git no puede decidir cual conservar. Tendras que resolverlo manualmente.</p>
+
+    <ul class="slide-list">
+      <li><span class="step-num">1</span> Ejecutar <strong>git merge</strong> o <strong>git pull</strong> — Git avisa del conflicto</li>
+      <li><span class="step-num">2</span> Abrir el archivo conflictivo — buscar los marcadores <strong>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</strong>, <strong>=======</strong> y <strong>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</strong></li>
+      <li><span class="step-num">3</span> Editar el archivo y quedarte con el codigo correcto (eliminar los marcadores)</li>
+      <li><span class="step-num">4</span> Marcar como resuelto con <strong>git add archivo.txt</strong></li>
+      <li><span class="step-num">5</span> Completar con <strong>git commit</strong> (Git crea el mensaje de merge automaticamente)</li>
+    </ul>
+
+    <h3>Ejemplo de marcadores de conflicto</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">archivo.txt</span></div>
+      <div class="terminal-body">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+<span style="color:var(--accent-1);">console.log("version main");</span>
+=======
+<span style="color:var(--accent-2);">console.log("version feature");</span>
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/login</div>
+    </div>
+
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body"><span style="color:var(--text-dim);"># Tras editar y resolver el conflicto:</span>
+git add archivo.txt
+git commit</div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- 6. GITHUB (TRABAJO REMOTO) -->
+  <!-- ============================================================ -->
+  <section>
+    <span class="tag">GITHUB</span>
+    <h2 class="headline headline-lg">GitHub (trabajo remoto)</h2>
+    <p class="body-text">Comandos para gestionar la conexion con repositorios remotos y el flujo de <strong>Pull Requests</strong>.</p>
+
+    <h3>Gestionar remotos</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body"><span style="color:var(--text-dim);"># Ver remotos configurados</span>
+git remote -v
+
+<span style="color:var(--text-dim);"># Agregar un remoto</span>
+git remote add origin https://github.com/usuario/repo.git
+
+<span style="color:var(--text-dim);"># Cambiar la URL de un remoto</span>
+git remote set-url origin https://github.com/usuario/nuevo-repo.git
+
+<span style="color:var(--text-dim);"># Descargar info del remoto sin fusionar</span>
+git fetch origin</div>
+    </div>
+
+    <h3>Flujo de Pull Request</h3>
+    <ul class="slide-list">
+      <li><span class="step-num">1</span> Crear rama: <strong>git switch -c feature/nueva-funcionalidad</strong></li>
+      <li><span class="step-num">2</span> Hacer commits en la rama</li>
+      <li><span class="step-num">3</span> Subir la rama: <strong>git push -u origin feature/nueva-funcionalidad</strong></li>
+      <li><span class="step-num">4</span> Abrir Pull Request en GitHub (boton <strong>"Compare & pull request"</strong>)</li>
+      <li><span class="step-num">5</span> Revisores aprueban o piden cambios</li>
+      <li><span class="step-num">6</span> Merge del PR en GitHub y eliminar la rama</li>
+    </ul>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- 7. DESHACER CAMBIOS -->
+  <!-- ============================================================ -->
+  <section>
+    <span class="tag">DESHACER</span>
+    <h2 class="headline headline-lg">Deshacer cambios</h2>
+    <p class="body-text">Todos cometemos errores. Git te permite <strong>retroceder</strong> en diferentes niveles segun donde esten los cambios.</p>
+
+    <h3>Descartar cambios en working directory</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body"><span style="color:var(--text-dim);"># Restaurar un archivo al ultimo commit</span>
+git restore archivo.txt
+
+<span style="color:var(--text-dim);"># Restaurar todos los archivos</span>
+git restore .</div>
+    </div>
+
+    <h3>Quitar del staging area (sin perder cambios)</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body"><span style="color:var(--text-dim);"># Quitar un archivo del staging</span>
+git restore --staged archivo.txt
+
+<span style="color:var(--text-dim);"># Quitar todo del staging</span>
+git restore --staged .</div>
+    </div>
+
+    <h3>Deshacer commits</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body"><span style="color:var(--text-dim);"># Deshacer ultimo commit (mantiene cambios en staging)</span>
+git reset --soft HEAD~1
+
+<span style="color:var(--text-dim);"># Deshacer ultimo commit (mantiene cambios en working dir)</span>
+git reset HEAD~1
+
+<span style="color:var(--text-dim);"># Deshacer ultimo commit (ELIMINA los cambios — cuidado!)</span>
+git reset --hard HEAD~1</div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- 8. FLUJO TIPICO -->
+  <!-- ============================================================ -->
+  <section>
+    <span class="tag">WORKFLOW</span>
+    <h2 class="headline headline-lg">Flujo tipico</h2>
+    <p class="body-text">El workflow completo que seguiras en el dia a dia del bootcamp y en proyectos reales.</p>
+
+    <ul class="slide-list">
+      <li><span class="step-num">1</span> <strong>git switch -c feature/mi-tarea</strong> — crear rama para tu tarea</li>
+      <li><span class="step-num">2</span> Editar archivos y hacer cambios</li>
+      <li><span class="step-num">3</span> <strong>git add .</strong> — preparar todos los cambios</li>
+      <li><span class="step-num">4</span> <strong>git commit -m "feat: descripcion"</strong> — confirmar los cambios</li>
+      <li><span class="step-num">5</span> <strong>git push -u origin feature/mi-tarea</strong> — subir la rama al remoto</li>
+      <li><span class="step-num">6</span> Abrir <strong>Pull Request</strong> en GitHub</li>
+      <li><span class="step-num">7</span> Code review y aprobacion del equipo</li>
+      <li><span class="step-num">8</span> <strong>Merge</strong> del PR a main</li>
+    </ul>
+
+    <h3>Resumen visual</h3>
+    <div class="terminal">
+      <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">bash</span></div>
+      <div class="terminal-body"><span style="color:var(--text-dim);"># 1. Crear rama</span>
+git switch -c feature/mi-tarea
+
+<span style="color:var(--text-dim);"># 2. Trabajar... editar archivos</span>
+
+<span style="color:var(--text-dim);"># 3. Preparar y confirmar</span>
+git add .
+git commit -m "feat: implementar login"
+
+<span style="color:var(--text-dim);"># 4. Subir al remoto</span>
+git push -u origin feature/mi-tarea
+
+<span style="color:var(--text-dim);"># 5. Abrir PR en GitHub → merge → limpiar</span>
+git switch main
+git pull
+git branch -d feature/mi-tarea</div>
+    </div>
+  </section>
+
+  <div class="footer-nav">
+    <a href="index.html">&larr; Indice</a>
+  </div>
+</div>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+</script>
+</body>
+</html>

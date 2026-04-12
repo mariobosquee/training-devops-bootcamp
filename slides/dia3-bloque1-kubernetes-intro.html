@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kubernetes Intro — Bootcamp DevOps 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0f; --bg-card: #12121a; --bg-surface: #1a1a26;
+    --accent-1: #00a3e0; --accent-2: #6366f1;
+    --text-primary: #f0eff4; --text-muted: #8a8a9a; --text-dim: #55556a;
+    --border: rgba(255,255,255,0.06); --glow-opacity: 0.15;
+  }
+
+  [data-theme="light"] {
+    --bg-deep: #fafaf9; --bg-card: #ffffff; --bg-surface: #f0efeb;
+    --accent-1: #00a3e0; --accent-2: #6366f1;
+    --text-primary: #1a1a1a; --text-muted: #5a5a6a; --text-dim: #9a9aaa;
+    --border: rgba(0,0,0,0.08); --glow-opacity: 0.06;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition), color var(--transition); }
+
+  .slide { min-height: 100vh; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; padding: 4rem; position: relative; overflow: hidden; }
+  .slide-inner { max-width: 1100px; width: 100%; z-index: 2; }
+
+  .headline { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: clamp(3rem, 8vw, 6.5rem); }
+  .headline-lg { font-size: clamp(2rem, 5vw, 4rem); }
+  .body-text { font-size: 1.15rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .gradient-text { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-1); border: 1px solid color-mix(in srgb, var(--accent-1) 30%, transparent); padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1.5rem; }
+  .slide-num { position: absolute; bottom: 2rem; right: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-dim); }
+  .slide-footer { position: absolute; bottom: 2rem; left: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); }
+
+  .bg-glow { position: absolute; border-radius: 50%; filter: blur(120px); opacity: var(--glow-opacity); pointer-events: none; transition: opacity var(--transition); }
+  .bg-noise { position: absolute; inset: 0; opacity: 0.025; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; }
+  .bg-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+
+  .slide-cover { text-align: center; }
+  .cover-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3rem; }
+  .cover-subtitle { font-family: 'Instrument Serif', serif; font-size: 1.8rem; font-style: italic; color: var(--text-muted); margin-top: 1rem; margin-bottom: 3rem; }
+  .cover-line { width: 120px; height: 2px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); margin: 2rem auto; }
+  .cover-meta { display: flex; gap: 2rem; justify-content: center; font-size: 0.9rem; color: var(--text-dim); }
+
+  .slide-list { list-style: none; padding: 0; margin-top: 1rem; }
+  .slide-list li { padding: 0.6rem 0 0.6rem 1.5rem; color: var(--text-muted); font-size: 1.1rem; position: relative; border-bottom: 1px solid var(--border); }
+  .slide-list li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-1); }
+
+  .terminal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 1.5rem 0; }
+  .terminal-bar { background: rgba(128,128,128,0.08); padding: 0.7rem 1rem; display: flex; gap: 0.4rem; }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap; }
+
+  .slide-table { width: 100%; margin: 1.5rem 0; border-collapse: separate; border-spacing: 0 0.4rem; }
+  .slide-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 0.6rem 1.2rem; text-align: left; }
+  .slide-table td { padding: 1rem 1.2rem; background: var(--bg-card); font-size: 1rem; color: var(--text-muted); }
+  .slide-table tr td:first-child { border-radius: 10px 0 0 10px; font-weight: 600; color: var(--text-primary); }
+  .slide-table tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  .logo { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 0.95rem; color: var(--text-muted); }
+  .logo strong { font-weight: 700; color: var(--accent-1); }
+  .logo-fixed { position: fixed; top: 1.8rem; left: 2rem; z-index: 999; }
+
+  .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; padding: 0.5rem; display: flex; gap: 0.25rem; }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .theme-btn.active { background: var(--accent-1); color: white; }
+
+  strong { color: var(--text-primary); }
+
+  .nav-links { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem; }
+  .nav-link { display: flex; flex-direction: column; gap: 0.3rem; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; text-decoration: none; color: var(--text-primary); transition: border-color 0.3s, transform 0.2s; }
+  .nav-link:hover { border-color: var(--accent-1); transform: translateY(-3px); }
+  .nav-prev { text-align: left; }
+  .nav-next { text-align: right; }
+  .nav-arrow { font-size: 1.5rem; color: var(--accent-1); }
+  .nav-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); }
+  .nav-title { font-family: 'Instrument Serif', serif; font-size: 1.4rem; }
+
+  @media print { .slide { page-break-after: always; } .theme-toggle, .logo-fixed { display: none; } html { scroll-snap-type: none; } }
+</style>
+</head>
+<body>
+
+<div class="theme-toggle">
+  <button class="theme-btn active" onclick="setTheme('dark')" id="btn-dark" title="Modo noche">&#9790;</button>
+  <button class="theme-btn" onclick="setTheme('light')" id="btn-light" title="Modo dia">&#9788;</button>
+</div>
+<a href="index.html" class="logo-fixed" style="text-decoration:none;"><span class="logo">carlos<strong>palanca</strong>.es</span></a>
+
+
+<section class="slide slide-cover">
+  <div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;top:-200px;right:-100px;"></div><div class="bg-glow" style="width:500px;height:500px;background:#6366f1;bottom:-200px;left:-100px;"></div><div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="cover-brand">T-Systems &middot; Universidad de Granada &middot; 2026</div>
+    <h1 class="headline headline-xl"><span class="gradient-text">Kubernetes Intro</span></h1>
+    <p class="cover-subtitle">Bootcamp DevOps 2026 &mdash; Dia 3 — Bloque 1</p>
+    <div class="cover-line"></div>
+    <div class="cover-meta"><span>Carlos Palanca</span><span>&middot;</span><span>Abril 2026</span></div>
+  </div>
+  <div class="slide-num">01 / 16</div>
+</section>
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Titulo</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Titulo</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <strong>Kubernetes Intro</strong>
+
+<p class="body-text">Bootcamp DevOps 2026 -- Dia 3, Bloque 1</p>
+
+<p class="body-text">Autor: Carlos Palanca</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">02 / 16</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Donde estamos</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Donde estamos</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">Dia 1: Dockerizamos la app          [completado]
+<p class="body-text">Dia 2: CI/CD con GitHub Actions     [completado]</p>
+<p class="body-text">Dia 3: Desplegamos en Kubernetes    [hoy]</pre></div></p>
+
+<p class="body-text">Tenemos imagenes Docker en GHCR. Ahora necesitamos ejecutarlas en un entorno real.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">03 / 16</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">El problema</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">El problema</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <strong>Gestionar muchos contenedores a mano es imposible.</strong>
+
+<ul class="slide-list">
+<li>10 microservicios x 3 replicas = 30 contenedores.</li>
+<li>Se cae uno a las 3 AM... quien lo reinicia?</li>
+<li>Llega mas trafico... quien lanza mas replicas?</li>
+<li>Nueva version... quien para los viejos y arranca los nuevos?</li>
+</ul>
+
+<p class="body-text">`docker run` no escala.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">04 / 16</div>
+</section>
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">La solucion: Kuberne</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">La solucion: Kubernetes</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text">Kubernetes (K8s) es un <strong>orquestador de contenedores</strong>.</p>
+
+<ul class="slide-list">
+<li>Despliega contenedores automaticamente.</li>
+<li>Escala segun la carga.</li>
+<li>Se recupera de fallos solo (self-healing).</li>
+<li>Actualiza sin downtime (rolling updates).</li>
+</ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">05 / 16</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Analogia</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Analogia: el director de hotel</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">Tu (kubectl)  -->  Director (K8s)  -->  Habitaciones (Pods)
+
+<ul class="slide-list">
+<li>"Quiero 3 habitaciones dobles"  -->  El director las asigna.</li>
+<li>Una habitacion se inunda         -->  El director reubica al huesped.</li>
+<li>Llegan 50 turistas               -->  El director abre mas habitaciones.</li>
+<li>Renovacion de una planta          -->  El director mueve huespedes sin que se enteren.</pre></div></li>
+</ul>
+
+<p class="body-text">Tu dices QUE quieres. Kubernetes decide COMO hacerlo.</p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">06 / 16</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Arquitectura</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Arquitectura</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">+------------------------------------------+
+<table class="slide-table"><thead><tr><th>CONTROL PLANE (cerebro)</th></tr></thead><tbody><tr><td>API Server</td><td>Scheduler</td><td>Controllers</td></tr></tbody></table>+------------------------------------------+
+<table class="slide-table"><thead><tr></tr></thead><tbody><tr><td>Worker 1</td><td></td><td>Worker 2</td><td></td><td>Worker 3</td></tr></tbody></table>  | [Pod][Pod]|  | [Pod]     |  | [Pod][Pod]|
+<p class="body-text">+-----------+  +-----------+  +-----------+</pre></div></p>
+
+<ul class="slide-list">
+<li><strong>Control Plane</strong>: recibe ordenes, toma decisiones.</li>
+<li><strong>Workers</strong>: ejecutan los contenedores.</li>
+</ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">07 / 16</div>
+</section>
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Pod</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Pod</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text">El <strong>Pod</strong> es la unidad minima de Kubernetes.</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">+--- Pod ---+
+<table class="slide-table"><thead><tr><th>Contenedor</th></tr></thead><tbody><tr><td>(nginx)</td></tr></tbody></table>+------------+</pre></div>
+
+<ul class="slide-list">
+<li>Normalmente 1 contenedor por pod.</li>
+<li>Tiene su propia IP dentro del cluster.</li>
+<li>Es efimero: si se muere, se crea uno nuevo.</li>
+</ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">08 / 16</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Deployment</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Deployment</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text">El <strong>Deployment</strong> gestiona un grupo de pods.</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">Deployment: bootcamp-api (replicas: 3)
+<p class="body-text">|</p>
+<p class="body-text">+-- Pod 1 [Running]</p>
+<p class="body-text">+-- Pod 2 [Running]</p>
+<p class="body-text">+-- Pod 3 [Running]</pre></div></p>
+
+<ul class="slide-list">
+<li>Tu dices cuantas replicas quieres.</li>
+<li>Si un pod se cae, el Deployment crea otro.</li>
+<li>Gestiona rolling updates y rollbacks.</li>
+</ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">09 / 16</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Service</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Service</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text">El <strong>Service</strong> da una direccion estable a los pods.</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">Cliente  -->  Service (IP fija)  -->  Pod 1
+<p class="body-text">-->  Pod 2</p>
+<p class="body-text">-->  Pod 3</pre></div></p>
+
+<ul class="slide-list">
+<li>Los pods van y vienen (IPs cambian).</li>
+<li>El Service siempre apunta a los pods correctos.</li>
+<li>Hace balanceo de carga automatico.</li>
+</ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">10 / 16</div>
+</section>
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">ConfigMap</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">ConfigMap</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <p class="body-text">El <strong>ConfigMap</strong> almacena configuracion fuera del contenedor.</p>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">apiVersion: v1
+<p class="body-text">kind: ConfigMap</p>
+<p class="body-text">metadata:</p>
+<p class="body-text">name: bootcamp-config</p>
+<p class="body-text">data:</p>
+<p class="body-text">NODE_ENV: production</p>
+<p class="body-text">PORT: "3333"</pre></div></p>
+
+<ul class="slide-list">
+<li>Variables de entorno, archivos de configuracion.</li>
+<li>Separas la config de la imagen Docker.</li>
+<li>Puedes cambiar la config sin reconstruir la imagen.</li>
+</ul>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">11 / 16</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">kubectl</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">kubectl: los comandos clave</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kubectl get pods          # Ver pods
+<p class="body-text">kubectl get all           # Ver todo</p>
+<p class="body-text">kubectl describe pod X    # Detalle de un pod</p>
+<p class="body-text">kubectl logs X            # Logs de un pod</p>
+<p class="body-text">kubectl apply -f X.yaml   # Aplicar manifiesto</p>
+<p class="body-text">kubectl delete -f X.yaml  # Eliminar recursos</p>
+<p class="body-text">kubectl port-forward ...  # Acceder desde local</pre></div></p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">12 / 16</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">kind</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">kind: Kubernetes en tu portatil</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <strong>kind</strong> = Kubernetes IN Docker.
+
+<ul class="slide-list">
+<li>Crea un cluster de K8s dentro de contenedores Docker.</li>
+<li>Perfecto para desarrollo y aprendizaje.</li>
+<li>Un solo comando para tener un cluster listo.</li>
+</ul>
+
+<div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">kind create cluster --name bootcamp</pre></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">13 / 16</div>
+</section>
+<section class="slide">
+  <div class="bg-grid"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Laboratorio</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Laboratorio</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <strong>En parejas (20 min):</strong>
+
+<p class="body-text">Parte 1 (10 min): Crear cluster con kind.</p>
+
+<p class="body-text">Parte 2 (10 min): Lanzar primer pod con nginx.</p>
+
+<strong>Showcase (10 min):</strong> Cada pareja ensena su cluster y explica que es un pod.
+<div style="margin-top:2rem;text-align:center;"><a href="dia3-bloque1-kubernetes-intro-lab.html" style="display:inline-block;padding:1rem 2.5rem;background:linear-gradient(135deg, var(--accent-1), var(--accent-2));color:white;text-decoration:none;border-radius:100px;font-family:'JetBrains Mono',monospace;font-size:0.9rem;letter-spacing:0.05em;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">Abrir laboratorio &rarr;</a></div>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">14 / 16</div>
+</section>
+<section class="slide">
+  <div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Lo que vais a hacer</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Lo que vais a hacer</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <div class="terminal"><div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span></div><pre class="terminal-body">1. kind create cluster --name bootcamp
+<p class="body-text">2. kubectl get nodes</p>
+<p class="body-text">3. kubectl run nginx --image=nginx</p>
+<p class="body-text">4. kubectl get pods</p>
+<p class="body-text">5. kubectl port-forward pod/nginx 8080:80</p>
+<p class="body-text">6. Abrir localhost:8080 en el navegador</p>
+<p class="body-text">7. kubectl delete pod nginx</pre></div></p>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">15 / 16</div>
+</section>
+<section class="slide">
+  <div class="bg-glow" style="width:700px;height:700px;background:#00a3e0;top:50%;left:50%;transform:translate(-50%,-50%);"></div><div class="bg-noise"></div>
+  <div class="slide-inner">
+    <div class="tag">Resumen</div>
+    <h2 class="headline headline-lg"><span class="gradient-text">Resumen</span></h2>
+    <div class="slide-content" style="margin-top:2rem;">
+      <table class="slide-table"><thead><tr><th>Concepto</th><th>Una frase</th></tr></thead><tbody><tr><td>Kubernetes</td><td>Orquestador de contenedores</td></tr><tr><td>Pod</td><td>Unidad minima, contiene un contenedor</td></tr><tr><td>Deployment</td><td>Gestiona pods, escalado y updates</td></tr><tr><td>Service</td><td>Direccion de red estable</td></tr><tr><td>ConfigMap</td><td>Configuracion externa</td></tr><tr><td>kubectl</td><td>CLI para hablar con K8s</td></tr><tr><td>kind</td><td>K8s en tu portatil</td></tr></tbody></table>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+  <div class="slide-num">16 / 16</div>
+</section>
+<section class="slide">
+  <div class="bg-glow" style="width:600px;height:600px;background:#00a3e0;bottom:-200px;left:-100px;"></div>
+  <div class="bg-noise"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="tag">Navegacion</div>
+    <h2 class="headline headline-lg">Continuar con el <span class="gradient-text">bootcamp</span></h2>
+    <div class="nav-links">
+      <a href="dia2-bloque2-github-actions.html" class="nav-link nav-prev"><span class="nav-arrow">&larr;</span><span class="nav-label">Anterior</span><span class="nav-title">GitHub Actions</span></a>
+      <a href="dia3-bloque3-helm.html" class="nav-link nav-next"><span class="nav-label">Siguiente</span><span class="nav-title">Helm</span><span class="nav-arrow">&rarr;</span></a>
+    </div>
+  </div>
+  <div class="slide-footer"><span class="logo">carlos<strong>palanca</strong>.es</span></div>
+</section>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('btn-dark').classList.toggle('active',t==='dark');document.getElementById('btn-light').classList.toggle('active',t==='light');localStorage.setItem('slide-theme',t);}
+const s=localStorage.getItem('slide-theme');if(s)setTheme(s);
+document.addEventListener('keydown',e=>{const sl=document.querySelectorAll('.slide');const c=Math.round(window.scrollY/window.innerHeight);if(['ArrowDown',' ','ArrowRight'].includes(e.key)){e.preventDefault();sl[Math.min(c+1,sl.length-1)].scrollIntoView({behavior:'smooth'});}if(['ArrowUp','ArrowLeft'].includes(e.key)){e.preventDefault();sl[Math.max(c-1,0)].scrollIntoView({behavior:'smooth'});}});
+</script>
+
+</body>
+</html>

@@ -2,6 +2,11 @@ name: CI Pipeline
 
 on:
   push:
+  pull_request:
+
+permissions:
+  contents: read
+  packages: write
 
 permissions:
   contents: read

@@ -19,3 +19,20 @@ jobs:
         working-directory: ./apps/promptlab/backend
         env:
           DB_PATH: /tmp/promptlab-ci.db
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+        working-directory: ./apps/promptlab/backend
+      - run: npm run lint
+        working-directory: ./apps/promptlab/backend
+  build:
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Tests y lint pasaron, listo para build"
